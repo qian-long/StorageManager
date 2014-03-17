@@ -2,12 +2,15 @@
 #include <fstream>
 #include <stdlib.h>
 #include <string>
+#include <cmath>
+#include <bitset>
+#include <algorithm>
 #include "Loader.h"
 
 using namespace std;
 
 // Constructor
-Loader::Loader(int nDim, vector<int> ranges, int nAttr) {
+Loader::Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr) {
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
@@ -19,6 +22,7 @@ Loader::~Loader() {
 }
 
 void Loader::read() {
+  // TODO: take in filepath as input
   ifstream file ("data/small.csv");
   string line;
   // reads file and store each row in a cell
@@ -40,32 +44,28 @@ void Loader::read() {
         tmp.push_back(line);
       }
       // iterate through split vector to separate into coordinates and attributes
-/*
-      vector<string>::iterator it = tmp.begin();
-      while (it != tmp.end()) {
-        cout << *it << endl;
-        ++it;
-      }
-*/
 
       // construct cell abstraction from each row
-      vector<int> coords;
-      vector<int> attributes;
+      vector<int64_t> coords;
+      vector<int64_t> attributes;
       vector<string>::iterator it = tmp.begin();
-      for (int i = 0; i < nDim; i++) {
-        cout << "nDim: " << i << endl;
+      for (int64_t i = 0; i < nDim; i++) {
+        //cout << "nDim: " << i << endl;
         coords.push_back(atoi((*it).c_str()));
         ++it;
       }
 
-      for (int i = 0; i < nAttr; i++) {
+      for (int64_t i = 0; i < nAttr; i++) {
 
-        cout << "nAttr " << i << endl;
+        //cout << "nAttr " << i << endl;
         attributes.push_back(atoi((*it).c_str()));
         ++it;
       }
 
       Cell * cell = new Cell(coords, attributes);
+      // TODO: Maybe move z order calculation elsewhere...
+      uint64_t morton = this->mortonEncode2D(coords.at(0), coords.at(1));
+      cell->setMortonCode(morton);
       this->cells.push_back(cell);
     }
 
@@ -74,17 +74,24 @@ void Loader::read() {
     cout << "error reading csv file" << endl;
   }
 
+/*
   vector<Cell *>::iterator it = this->cells.begin();
   while (it != cells.end()) {
     cout << (*it)->coords.size() << endl;
     ++it;
   }
+*/
   cout << "end read" << endl;
 
 }
 
-void Loader::sort() {
+bool sortByMorton(Cell *c1, Cell *c2) {
+  return (c1->getMortonCode() < c2->getMortonCode());
+}
 
+// TODO: implement own sorting with merge sort
+void Loader::sort() {
+  std::sort(this->cells.begin(), this->cells.end(), sortByMorton);
 }
 
 
@@ -97,29 +104,45 @@ void Loader::store() {
 
 }
 
-// private functions
-/*
-void splitLine(string & line, string delim, vector<string> & values) {
-    size_t pos = 0;
-    while ((pos = line.find(delim, (pos + 1))) != string::npos) {
-        string p = line.substr(0, pos);
-        values.push_back(p);
-        line = line.substr(pos + 1);
-    }
+// Private functions
 
-    if (!line.empty()) {
-        values.push_back(line);
-    }
+// TODO: fix for negative numbers, shift the ranges...
+//       use shiftCoord helper
+// http://www-graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+uint64_t Loader::mortonEncode2D(uint64_t x, uint64_t y) {
+
+  x = (x | (x << 16)) & 0x0000FFFF0000FFFF;
+  x = (x | (x << 8 )) & 0x00FF00FF00FF00FF;
+  x = (x | (x << 4 )) & 0x0F0F0F0F0F0F0F0F;
+  x = (x | (x << 2 )) & 0x3333333333333333;
+  x = (x | (x << 1 )) & 0x5555555555555555;
+
+  y = (y | (y << 16)) & 0x0000FFFF0000FFFF;
+  y = (y | (y << 8 )) & 0x00FF00FF00FF00FF;
+  y = (y | (y << 4 )) & 0x0F0F0F0F0F0F0F0F;
+  y = (y | (y << 2 )) & 0x3333333333333333;
+  y = (y | (y << 1 )) & 0x5555555555555555;
+
+
+  return x | (y << 1);
 }
-*/
+
+// Morton ordering algorithm needs nonegative numbers
+uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
+  if (min < 0) {
+    return (uint64_t) (-1 * min + coord);
+  }
+  return (uint64_t) coord;
+}
 
 // Main function
 // TODO: move somewhere else
 int main(int argc, char *argv[]) {
-  int nDim = 2;
-  int nAttribute = 1;
-  // TODO: look for a better way to do this
-  vector<int> ranges;
+  int64_t nDim = 2;
+  int64_t nAttribute = 1;
+
+  // TODO: Read this from config file later
+  vector<int64_t> ranges;
   ranges.push_back(0);
   ranges.push_back(100);
   ranges.push_back(0);
@@ -129,6 +152,24 @@ int main(int argc, char *argv[]) {
   std::cout << "hi" << std::endl;
   std::cout << loader->nDim << std::endl;
 
+/*
+  int test[4] = {0,1,2,3};
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      uint64_t z = loader->mortonEncode2D(i, j);
+      cout << "i: " << i << " j: " << j << " z: " << std::bitset<4>(z) << endl;
+      //printf("i: %d %s, j: %d %s, z %d %d", i, std::bitset<16>(i).to_string(), j, std::bitset<16>(j).to_string(), z, std::bitset<16>(z).to_string());
+    }
+  }
+*/
   loader->read();
+  loader->sort();
+
+  vector<Cell *>::iterator it = loader->cells.begin();
+  while (it != loader->cells.end()) {
+    cout << "x: " << (*it)->coords.at(0) << " y: " << (*it)->coords.at(1) << endl;
+    ++it;
+  }
+
   return 0;
 }
