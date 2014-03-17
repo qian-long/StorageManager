@@ -10,10 +10,11 @@
 using namespace std;
 
 // Constructor
-Loader::Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr) {
+Loader::Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride) {
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
+  this->stride = stride;
 }
 
 // Destructor
@@ -23,7 +24,7 @@ Loader::~Loader() {
 
 void Loader::read() {
   // TODO: take in filepath as input
-  ifstream file ("data/small.csv");
+  ifstream file ("data/tiny.csv");
   string line;
   // reads file and store each row in a cell
   if (file.is_open()) {
@@ -74,13 +75,6 @@ void Loader::read() {
     cout << "error reading csv file" << endl;
   }
 
-/*
-  vector<Cell *>::iterator it = this->cells.begin();
-  while (it != cells.end()) {
-    cout << (*it)->coords.size() << endl;
-    ++it;
-  }
-*/
   cout << "end read" << endl;
 
 }
@@ -109,7 +103,9 @@ void Loader::store() {
 // TODO: fix for negative numbers, shift the ranges...
 //       use shiftCoord helper
 // http://www-graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
+// TODO: only works for 32 bit x, y
 uint64_t Loader::mortonEncode2D(uint64_t x, uint64_t y) {
+
 
   x = (x | (x << 16)) & 0x0000FFFF0000FFFF;
   x = (x | (x << 8 )) & 0x00FF00FF00FF00FF;
@@ -122,7 +118,6 @@ uint64_t Loader::mortonEncode2D(uint64_t x, uint64_t y) {
   y = (y | (y << 4 )) & 0x0F0F0F0F0F0F0F0F;
   y = (y | (y << 2 )) & 0x3333333333333333;
   y = (y | (y << 1 )) & 0x5555555555555555;
-
 
   return x | (y << 1);
 }
@@ -140,6 +135,7 @@ uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
 int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
+  int stride = 20;
 
   // TODO: Read this from config file later
   vector<int64_t> ranges;
@@ -148,28 +144,30 @@ int main(int argc, char *argv[]) {
   ranges.push_back(0);
   ranges.push_back(100);
 
-  Loader *loader = new Loader(nDim, ranges, nAttribute);
+  Loader *loader = new Loader(nDim, ranges, nAttribute, 20);
   std::cout << "hi" << std::endl;
   std::cout << loader->nDim << std::endl;
 
-/*
-  int test[4] = {0,1,2,3};
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
+
+  int test[10] = {0,1,2,3,4,5,6,7,8,9};
+  int limit = 5;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
       uint64_t z = loader->mortonEncode2D(i, j);
-      cout << "i: " << i << " j: " << j << " z: " << std::bitset<4>(z) << endl;
+      cout << "i: " << i << " j: " << j << " z: " << z << endl;
       //printf("i: %d %s, j: %d %s, z %d %d", i, std::bitset<16>(i).to_string(), j, std::bitset<16>(j).to_string(), z, std::bitset<16>(z).to_string());
     }
   }
-*/
-  loader->read();
+
+/*
+ loader->read();
   loader->sort();
 
   vector<Cell *>::iterator it = loader->cells.begin();
   while (it != loader->cells.end()) {
-    cout << "x: " << (*it)->coords.at(0) << " y: " << (*it)->coords.at(1) << endl;
+    cout << "x: " << (*it)->coords.at(0) << " y: " << (*it)->coords.at(1) << " morton: " << (*it)->getMortonCode() << endl;
     ++it;
   }
-
+*/
   return 0;
 }

@@ -18,9 +18,10 @@ class Loader {
     int64_t nAttr;
     vector<int64_t> ranges;
     vector<Cell *> cells;
+    int stride; // fixed logical tile size
     
     // Constructor
-    Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr);    
+    Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride);    
     
     // Destructor
     ~Loader();

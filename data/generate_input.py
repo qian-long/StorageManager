@@ -10,4 +10,4 @@ def generate(LIMIT):
     print str(x) + ',' + str(y) + ',' + str(attr)
 
 if __name__ == "__main__":
-  generate(10)
+  generate(4)
