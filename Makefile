@@ -15,4 +15,4 @@ $(EXECUTABLE): $(OBJECTS)
 all: $(SOURCES) $(EXECUTABLE)
 
 clean:
-	$(RM) $(EXECUTABLE) *.o *~
+	$(RM) $(EXECUTABLE) *.o *~ *.dat

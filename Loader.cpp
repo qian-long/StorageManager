@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "Loader.h"
 
+#define TILENAME_TEMPLATE tile-%s-.dat
 using namespace std;
 
 // Constructor
@@ -24,7 +25,7 @@ Loader::~Loader() {
 
 void Loader::read() {
   // TODO: take in filepath as input
-  ifstream file ("data/tiny.csv");
+  ifstream file ("data/small.csv");
   string line;
   // reads file and store each row in a cell
   if (file.is_open()) {
@@ -73,7 +74,6 @@ void Loader::read() {
       // TODO: generalize to rectangles
       // round to nearest power of 2
 
-      cout << "Assigning id" << endl;
       string id = string("");
       vector<int64_t>::iterator itc = cell->coords.begin();
 
@@ -82,7 +82,6 @@ void Loader::read() {
         itc++;
       }
 
-      cout << "id: " << id << endl;
       cell->setTileID(id);
 
       this->cells.push_back(cell);
@@ -111,33 +110,22 @@ void Loader::sort() {
 void Loader::tile() {
   // divide array into stride-length squares
   // assume array is shifted to start at (0,0)
-  vector<uint64_t> mortonSplits;
-  uint64_t xrange = this->ranges.at(1) - this->ranges.at(0) + 1;
-  uint64_t yrange = this->ranges.at(3) - this->ranges.at(2) + 1;
-
-  // round to nearest multiple of stride, put leftovers in another tile
-  // TODO: maybe pack in with previous tile?
-  uint64_t xend = (xrange / this->stride) * this->stride;
-  uint64_t yend = (yrange / this->stride) * this->stride;
-
-  for (uint64_t i = 0; i < xend; i = i + this->stride) {
-    for (uint64_t j = 0; j < yend; j = j + this->stride) {
-      mortonSplits.push_back(this->mortonEncode2D(i,j));
+  vector<Cell *>::iterator it  = this->cells.begin();
+    while (it != this->cells.end()) {
+    string filename = "tile" + (*it)->getTileID() + ".dat";
+    cout << "filename: " << filename << endl;
+    ofstream tilefile;
+    tilefile.open(filename, std::fstream::app);
+    vector<int64_t>::iterator it1 = (*it)->coords.begin();
+    while (it1 != (*it)->coords.end()) {
+      tilefile << (*it1) << " ";
+      it1++;
     }
+    tilefile << endl;
+    it++;
   }
-/*
-  uint64_t xlast = this->shiftCoord(this->ranges.at(1), this->ranges.at(0));
-  uint64_t ylast = this->shiftCoord(this->ranges.at(3), this->ranges.at(2));
-*/
-  std::sort(mortonSplits.begin(), mortonSplits.end());
 
-  vector<uint64_t>::iterator it = mortonSplits.begin();
-/*
-  while (it != mortonSplits.end()) {
-    cout << "mortonSplite: " << *it << endl;
-    ++it;
-  }
-*/
+  // TODO: close all files
 }
 
 
@@ -182,14 +170,14 @@ uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
 int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
-  int stride = 2;
+  int stride = 200;
 
   // TODO: Read this from config file later
   vector<int64_t> ranges;
   ranges.push_back(0);
-  ranges.push_back(100);
+  ranges.push_back(1000);
   ranges.push_back(0);
-  ranges.push_back(100);
+  ranges.push_back(1000);
 
   Loader *loader = new Loader(nDim, ranges, nAttribute, stride);
   std::cout << "hi" << std::endl;
