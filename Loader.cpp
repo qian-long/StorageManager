@@ -67,7 +67,26 @@ void Loader::read() {
       // TODO: Maybe move z order calculation elsewhere...
       uint64_t morton = this->mortonEncode2D(coords.at(0), coords.at(1));
       cell->setMortonCode(morton);
+
+      // Calculate tileID
+      // TODO: generalize to multi-dimension
+      // TODO: generalize to rectangles
+      // round to nearest power of 2
+
+      cout << "Assigning id" << endl;
+      string id = string("");
+      vector<int64_t>::iterator itc = cell->coords.begin();
+
+      while (itc != cell->coords.end()) {
+        id += "-" + string(std::to_string(*itc / stride));
+        itc++;
+      }
+
+      cout << "id: " << id << endl;
+      cell->setTileID(id);
+
       this->cells.push_back(cell);
+
     }
 
   }
@@ -90,7 +109,35 @@ void Loader::sort() {
 
 
 void Loader::tile() {
+  // divide array into stride-length squares
+  // assume array is shifted to start at (0,0)
+  vector<uint64_t> mortonSplits;
+  uint64_t xrange = this->ranges.at(1) - this->ranges.at(0) + 1;
+  uint64_t yrange = this->ranges.at(3) - this->ranges.at(2) + 1;
 
+  // round to nearest multiple of stride, put leftovers in another tile
+  // TODO: maybe pack in with previous tile?
+  uint64_t xend = (xrange / this->stride) * this->stride;
+  uint64_t yend = (yrange / this->stride) * this->stride;
+
+  for (uint64_t i = 0; i < xend; i = i + this->stride) {
+    for (uint64_t j = 0; j < yend; j = j + this->stride) {
+      mortonSplits.push_back(this->mortonEncode2D(i,j));
+    }
+  }
+/*
+  uint64_t xlast = this->shiftCoord(this->ranges.at(1), this->ranges.at(0));
+  uint64_t ylast = this->shiftCoord(this->ranges.at(3), this->ranges.at(2));
+*/
+  std::sort(mortonSplits.begin(), mortonSplits.end());
+
+  vector<uint64_t>::iterator it = mortonSplits.begin();
+/*
+  while (it != mortonSplits.end()) {
+    cout << "mortonSplite: " << *it << endl;
+    ++it;
+  }
+*/
 }
 
 
@@ -135,7 +182,7 @@ uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
 int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
-  int stride = 20;
+  int stride = 2;
 
   // TODO: Read this from config file later
   vector<int64_t> ranges;
@@ -144,25 +191,30 @@ int main(int argc, char *argv[]) {
   ranges.push_back(0);
   ranges.push_back(100);
 
-  Loader *loader = new Loader(nDim, ranges, nAttribute, 20);
+  Loader *loader = new Loader(nDim, ranges, nAttribute, stride);
   std::cout << "hi" << std::endl;
   std::cout << loader->nDim << std::endl;
 
 
+/*
   int test[10] = {0,1,2,3,4,5,6,7,8,9};
   int limit = 5;
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       uint64_t z = loader->mortonEncode2D(i, j);
       cout << "i: " << i << " j: " << j << " z: " << z << endl;
-      //printf("i: %d %s, j: %d %s, z %d %d", i, std::bitset<16>(i).to_string(), j, std::bitset<16>(j).to_string(), z, std::bitset<16>(z).to_string());
     }
   }
+*/
 
-/*
- loader->read();
+  std::cout << "loader->read()" << endl;
+  loader->read();
+  std::cout << "loader->sort()" << endl;
   loader->sort();
 
+  std::cout << "loader->tile()" << endl;
+  loader->tile();
+/*
   vector<Cell *>::iterator it = loader->cells.begin();
   while (it != loader->cells.end()) {
     cout << "x: " << (*it)->coords.at(0) << " y: " << (*it)->coords.at(1) << " morton: " << (*it)->getMortonCode() << endl;
