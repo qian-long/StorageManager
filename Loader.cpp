@@ -19,13 +19,14 @@ Loader::Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride) 
 }
 
 // Destructor
+// TODO
 Loader::~Loader() {
 
 }
 
 void Loader::read() {
   // TODO: take in filepath as input
-  ifstream file ("data/small.csv");
+  ifstream file ("data/multi-attributes.csv");
   string line;
   // reads file and store each row in a cell
   if (file.is_open()) {
@@ -47,19 +48,19 @@ void Loader::read() {
       }
       // iterate through split vector to separate into coordinates and attributes
 
-      // construct cell abstraction from each row
+      // Construct cell abstraction from each row
       vector<int64_t> coords;
       vector<int64_t> attributes;
       vector<string>::iterator it = tmp.begin();
+
+      // Coordinates
       for (int64_t i = 0; i < nDim; i++) {
-        //cout << "nDim: " << i << endl;
         coords.push_back(atoi((*it).c_str()));
         ++it;
       }
 
+      // Attributes
       for (int64_t i = 0; i < nAttr; i++) {
-
-        //cout << "nAttr " << i << endl;
         attributes.push_back(atoi((*it).c_str()));
         ++it;
       }
@@ -70,9 +71,7 @@ void Loader::read() {
       cell->setMortonCode(morton);
 
       // Calculate tileID
-      // TODO: generalize to multi-dimension
       // TODO: generalize to rectangles
-      // round to nearest power of 2
 
       string id = string("");
       vector<int64_t>::iterator itc = cell->coords.begin();
@@ -111,27 +110,34 @@ void Loader::tile() {
   // divide array into stride-length squares
   // assume array is shifted to start at (0,0)
   vector<Cell *>::iterator it  = this->cells.begin();
-    while (it != this->cells.end()) {
-    string filename = "tile" + (*it)->getTileID() + ".dat";
-    cout << "filename: " << filename << endl;
+  while (it != this->cells.end()) {
+    string fileCoords = "tile-coords" + (*it)->getTileID() + ".dat";
     ofstream tilefile;
-    tilefile.open(filename, std::fstream::app);
+    tilefile.open(fileCoords, std::fstream::app);
     vector<int64_t>::iterator it1 = (*it)->coords.begin();
     while (it1 != (*it)->coords.end()) {
       tilefile << (*it1) << " ";
       it1++;
     }
     tilefile << endl;
+
+    string fileAttrs = "tile-attrs" + (*it)->getTileID() + ".dat";
+    ofstream attrfile;
+    attrfile.open(fileAttrs, std::fstream::app);
+    vector<int64_t>::iterator it2 = (*it)->attributes.begin();
+    while (it2 != (*it)->attributes.end()) {
+      attrfile << (*it2) << " ";
+      it2++;
+    }
+    attrfile << endl;
+
+    // Next cell
     it++;
   }
 
   // TODO: close all files
 }
 
-
-void Loader::store() {
-
-}
 
 // Private functions
 
@@ -168,46 +174,28 @@ uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
 // Main function
 // TODO: move somewhere else
 int main(int argc, char *argv[]) {
-  int64_t nDim = 2;
-  int64_t nAttribute = 1;
-  int stride = 200;
+  int64_t nDim = 5;
+  int64_t nAttribute = 5;
+  int stride = 20;
 
   // TODO: Read this from config file later
   vector<int64_t> ranges;
   ranges.push_back(0);
-  ranges.push_back(1000);
+  ranges.push_back(100);
   ranges.push_back(0);
-  ranges.push_back(1000);
+  ranges.push_back(100);
 
   Loader *loader = new Loader(nDim, ranges, nAttribute, stride);
   std::cout << "hi" << std::endl;
   std::cout << loader->nDim << std::endl;
 
 
-/*
-  int test[10] = {0,1,2,3,4,5,6,7,8,9};
-  int limit = 5;
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j++) {
-      uint64_t z = loader->mortonEncode2D(i, j);
-      cout << "i: " << i << " j: " << j << " z: " << z << endl;
-    }
-  }
-*/
-
   std::cout << "loader->read()" << endl;
   loader->read();
   std::cout << "loader->sort()" << endl;
   loader->sort();
-
   std::cout << "loader->tile()" << endl;
   loader->tile();
-/*
-  vector<Cell *>::iterator it = loader->cells.begin();
-  while (it != loader->cells.end()) {
-    cout << "x: " << (*it)->coords.at(0) << " y: " << (*it)->coords.at(1) << " morton: " << (*it)->getMortonCode() << endl;
-    ++it;
-  }
-*/
+
   return 0;
 }

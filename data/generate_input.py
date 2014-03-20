@@ -2,12 +2,14 @@
 
 import random
 
-def generate(LIMIT):
-  for i in xrange(10):
-    x = int(random.random()*LIMIT)
-    y = int(random.random()*LIMIT)
-    attr = int(random.random()*LIMIT)
-    print str(x) + ',' + str(y) + ',' + str(attr)
+def generate(LIMIT, num_cells, num_col):
+  for i in xrange(num_cells):
+    string = ""
+    for j in xrange(num_col-1):
+      string = string + str(int(random.random()*LIMIT)) + ","
+
+    string = string + str(int(random.random()*LIMIT))
+    print string
 
 if __name__ == "__main__":
-  generate(4)
+  generate(100, 100, 10)

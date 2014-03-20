@@ -32,13 +32,10 @@ class Loader {
     // creates a temporary sorted file
     void sort();
 
-    // divides sorted file into tiles
+    // divides sorted file into tiles and writes to disk
     void tile();
-    
-    // writes tiles to file
-    void store(); 
 
-  // TODO: make private
+    // TODO: make private
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
 };
