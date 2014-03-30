@@ -14,14 +14,15 @@ class Loader {
   public:
 
     // parameters
+    string filename;
     int64_t nDim;
     int64_t nAttr;
     vector<int64_t> ranges;
     vector<Cell *> cells;
-    int stride; // fixed logical tile size
+    int stride; // fixed logical tile size, range of logical coord space in one dimension
     
     // Constructor
-    Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride);    
+    Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride);    
     
     // Destructor
     ~Loader();

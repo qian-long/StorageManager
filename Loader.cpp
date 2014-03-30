@@ -12,7 +12,8 @@
 using namespace std;
 
 // Constructor
-Loader::Loader(int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride) {
+Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride) {
+  this->filename = filename;
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
@@ -27,7 +28,7 @@ Loader::~Loader() {
 
 void Loader::read() {
   // TODO: take in filepath as input
-  ifstream file ("data/tiny.csv");
+  ifstream file (filename);
   string line;
   // reads file and store each row in a cell
   if (file.is_open()) {
@@ -187,33 +188,4 @@ uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
     return (uint64_t) (-1 * min + coord);
   }
   return (uint64_t) coord;
-}
-
-// Main function
-// TODO: move somewhere else
-int main(int argc, char *argv[]) {
-  int64_t nDim = 2;
-  int64_t nAttribute = 1;
-  int stride = 2;
-
-  // TODO: Read this from config file later
-  vector<int64_t> ranges;
-  ranges.push_back(0);
-  ranges.push_back(10);
-  ranges.push_back(0);
-  ranges.push_back(10);
-
-  Loader *loader = new Loader(nDim, ranges, nAttribute, stride);
-  std::cout << "hi" << std::endl;
-  std::cout << loader->nDim << std::endl;
-
-
-  std::cout << "loader->read()" << endl;
-  loader->read();
-  std::cout << "loader->sort()" << endl;
-  loader->sort();
-  std::cout << "loader->tile()" << endl;
-  loader->tile();
-
-  return 0;
 }
