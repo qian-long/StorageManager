@@ -1,7 +1,7 @@
 CC=g++ -std=c++11
 CFLAGS=-c -Wall
 LDFLAGS=
-SOURCES=Loader.cpp Cell.cpp Main.cpp
+SOURCES=Loader.cpp Cell.cpp Main.cpp Indexer.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=loader
 
