@@ -12,4 +12,4 @@ def generate(LIMIT, num_cells, num_col):
     print string
 
 if __name__ == "__main__":
-  generate(100, 100, 10)
+  generate(10, 10, 3)

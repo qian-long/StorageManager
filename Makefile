@@ -16,3 +16,6 @@ all: $(SOURCES) $(EXECUTABLE)
 
 clean:
 	$(RM) $(EXECUTABLE) *.o *~ *.dat
+
+cleandata:
+	$(RM) *.dat*

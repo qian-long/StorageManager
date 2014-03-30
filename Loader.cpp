@@ -5,6 +5,7 @@
 #include <cmath>
 #include <bitset>
 #include <algorithm>
+#include <map>
 #include "Loader.h"
 
 #define TILENAME_TEMPLATE tile-%s-.dat
@@ -26,7 +27,7 @@ Loader::~Loader() {
 
 void Loader::read() {
   // TODO: take in filepath as input
-  ifstream file ("data/multi-attributes.csv");
+  ifstream file ("data/tiny.csv");
   string line;
   // reads file and store each row in a cell
   if (file.is_open()) {
@@ -107,6 +108,11 @@ void Loader::sort() {
 
 
 void Loader::tile() {
+
+  // Hashmap of filename for attribute to its contents
+  // One filename per attribute/tile combination
+  map<string, vector<string>> attrMap;
+
   // divide array into stride-length squares
   // assume array is shifted to start at (0,0)
   vector<Cell *>::iterator it  = this->cells.begin();
@@ -121,18 +127,30 @@ void Loader::tile() {
     }
     tilefile << endl;
 
-    string fileAttrs = "tile-attrs" + (*it)->getTileID() + ".dat";
-    ofstream attrfile;
-    attrfile.open(fileAttrs, std::fstream::app);
+
     vector<int64_t>::iterator it2 = (*it)->attributes.begin();
+    int attrCounter = 0;
     while (it2 != (*it)->attributes.end()) {
-      attrfile << (*it2) << " ";
+      string filename = "tile-attrs[" + to_string(attrCounter) + "]" + (*it)->getTileID() + ".dat";
+      attrMap[filename].push_back(to_string(*it2));
       it2++;
+      attrCounter++;
     }
-    attrfile << endl;
 
     // Next cell
     it++;
+  }
+
+  // Write attributes to corresponding files
+  for (map<string, vector<string>>::iterator it = attrMap.begin(); it != attrMap.end(); ++it) {
+    string key = it->first;
+    vector<string> contents = attrMap[key];
+
+    ofstream attrfile;
+    attrfile.open(key, std::fstream::app);
+    for (vector<string>::iterator itv = contents.begin(); itv != contents.end(); ++itv) {
+      attrfile << (*itv) << endl;
+    }
   }
 
   // TODO: close all files
@@ -174,16 +192,16 @@ uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
 // Main function
 // TODO: move somewhere else
 int main(int argc, char *argv[]) {
-  int64_t nDim = 5;
-  int64_t nAttribute = 5;
-  int stride = 20;
+  int64_t nDim = 2;
+  int64_t nAttribute = 1;
+  int stride = 2;
 
   // TODO: Read this from config file later
   vector<int64_t> ranges;
   ranges.push_back(0);
-  ranges.push_back(100);
+  ranges.push_back(10);
   ranges.push_back(0);
-  ranges.push_back(100);
+  ranges.push_back(10);
 
   Loader *loader = new Loader(nDim, ranges, nAttribute, stride);
   std::cout << "hi" << std::endl;
