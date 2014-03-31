@@ -26,13 +26,23 @@ class Indexer {
     // Destructor
     ~Indexer();
     
-    // Return tiles for attribute
     vector<string> * findTilesByAttribute(int attrIndex);
 
+    // Returns attribute tile given attribute index and tileid
     string getAttrTileById(int attrIndex, string tileid);
     string getCoordTileById(string tileid);
+
+    // Returns all attribute tiles given tileid
+    vector<string> * getAllAttrTilesById(string tileid);
+    
+    // Returns tile id given coordinates
+    string getTileIdByCoords(vector<int64_t> * coords);
+
+    // Returns all attribute tiles given coordinates
+    vector<string> * getAllAttrTilesByCoords(vector<int64_t> * coords);
   private:
-    vector<string> *generateTileIds();
+    vector<string> * generateTileIds();
+    
     bool fileExists(string filename);
 };
 

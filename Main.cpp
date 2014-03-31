@@ -4,6 +4,7 @@
 #include "Loader.h"
 #include "Indexer.h"
 #include "Filter.h"
+#include "Subarray.h"
 
 using namespace std;
 // Main function
@@ -47,5 +48,17 @@ int main(int argc, char *argv[]) {
   Filter * f1 = new Filter(indexer, attrIndex, ftype, val, filtername);
   cout << "Filter: " << endl;
   f1->filter();
+
+
+  cout << "Subarray: " << endl;
+  vector<int64_t> subranges;
+  subranges.push_back(3);
+  subranges.push_back(7);
+  subranges.push_back(3);
+  subranges.push_back(7);
+  string subarrayName = "output-subarray0";
+  Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
+  s1->execute();
+
   return 0;
 }

@@ -57,6 +57,32 @@ string Indexer::getCoordTileById(string tileid) {
 
 }
 
+vector<string> * Indexer::getAllAttrTilesById(string tileid) {
+  vector<string> * attrTiles = new vector<string>();
+  for (int i = 0; i < this->nAttr; ++i) {
+    attrTiles->push_back(Indexer::getAttrTileById(i, tileid));
+  }
+  return attrTiles;
+}
+
+// Returns tile id given coordinates
+string Indexer::getTileIdByCoords(vector<int64_t> * coords) {
+  vector<int64_t>::iterator it = coords->begin();
+  string id = to_string(*it/this->stride);
+  it++;
+
+  for (; it != coords->end(); ++it) {
+    id = id + "-" + to_string(*it/this->stride);
+  }
+
+  return id;
+}
+
+// Returns all attribute tiles given coordinates
+vector<string> * Indexer::getAllAttrTilesByCoords(vector<int64_t> * coords) {
+  string id = getTileIdByCoords(coords);
+  return Indexer::getAllAttrTilesById(id);
+}
 // Private functions
 // Produce all combinations of [(0,...,x), (0,...,y), ...]
 vector<string> * Indexer::generateTileIds() {
