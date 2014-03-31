@@ -120,6 +120,7 @@ void Loader::tile() {
   while (it != this->cells.end()) {
     string fileCoords = "tile-coords" + (*it)->getTileID() + ".dat";
     ofstream tilefile;
+    // std::fstream::app = append mode
     tilefile.open(fileCoords, std::fstream::app);
     vector<int64_t>::iterator it1 = (*it)->coords.begin();
     while (it1 != (*it)->coords.end()) {

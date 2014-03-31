@@ -3,9 +3,9 @@
 #include <map>
 #include "Loader.h"
 #include "Indexer.h"
+#include "Filter.h"
 
 using namespace std;
-
 // Main function
 int main(int argc, char *argv[]) {
 
@@ -34,15 +34,18 @@ int main(int argc, char *argv[]) {
   loader->tile();
 
   Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride);
-  map<int, vector<string>> mymap = indexer->attrToTileMap;
-  for (map<int, vector<string>>::iterator it = mymap.begin(); it != mymap.end(); ++it) {
-    int key = it->first;
-    vector<string> contents = mymap[key];
-    cout << "key: " << key << endl;
-    for (vector<string>::iterator itc = contents.begin(); itc != contents.end(); ++itc) {
+  int attrIndex = 0;
+  vector<string> *tiles = indexer->findTilesByAttribute(attrIndex);
+  for (vector<string>::iterator itc = tiles->begin(); itc != tiles->end(); ++itc) {
       cout << *itc << endl;
-    }
   }
 
+
+  Filter::FilterType ftype = Filter::FilterType::GT;
+  int64_t val = 5;
+  string filtername = "output-filter-GT-5";
+  Filter * f1 = new Filter(indexer, attrIndex, ftype, val, filtername);
+  cout << "Filter: " << endl;
+  f1->filter();
   return 0;
 }

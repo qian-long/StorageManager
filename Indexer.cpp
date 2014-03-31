@@ -16,9 +16,7 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride) {
   this->stride = stride;
 
   // Initialize maps
-  cout << "Generating tile IDS" << endl;
-  vector<string> *tileids = this->generateTileIds();
-
+  this->tileids = this->generateTileIds();
   for (vector<string>::iterator it = tileids->begin(); it != tileids->end(); ++it) {
     string suffix = *it;
     for (int i = 0; i < nAttr; ++i) {
@@ -32,19 +30,32 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride) {
     }
   }
 
-  delete tileids;
 }
 
 // Destructor
 // TODO
 Indexer::~Indexer() {
+  delete tileids;
 }
 
-/*
-vector<string> Indexer::findTilesByAttribute(int attrIndex) {
+
+vector<string> * Indexer::findTilesByAttribute(int attrIndex) {
+  return &attrToTileMap[attrIndex];
+}
+
+string Indexer::getAttrTileById(int attrIndex, string tileid) {
+
+  string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + ".dat";
+  return filename;
+}
+
+
+string Indexer::getCoordTileById(string tileid) {
+
+  string filename = "tile-coords-" + tileid + ".dat";
+  return filename;
 
 }
-*/
 
 // Private functions
 // Produce all combinations of [(0,...,x), (0,...,y), ...]
@@ -64,19 +75,18 @@ vector<string> * Indexer::generateTileIds() {
   }
 
 
-  vector<string> * output = new vector<string>();
+  vector<string> output;
   vector<int>::iterator it = splits.begin();
   int first = *it;
   for (int i = 0; i < first; ++i) {
-    output->push_back(to_string(i));
+    output.push_back(to_string(i));
   }
   ++it;
 
   while (it != splits.end()) {
     int numSplits = *it;
-    cout << "numSplits: " << numSplits << endl;
     vector<string> copy;
-    for (vector<string>::iterator ito = output->begin(); ito != output->end(); ++ito) {
+    for (vector<string>::iterator ito = output.begin(); ito != output.end(); ++ito) {
       copy.push_back(*ito);
 
       // modify output
@@ -85,12 +95,29 @@ vector<string> * Indexer::generateTileIds() {
 
     for (int i = 1; i < numSplits; ++i) {
       for (vector<string>::iterator ito = copy.begin(); ito != copy.end(); ++ito) {
-        output->push_back(to_string(i) + "-" + *ito);
+        output.push_back(to_string(i) + "-" + *ito);
       }
     }
     ++it;
   }
-  return output;
+
+  vector<string> * filteredOutput = new vector<string>();
+  // Filter output to only files that exist
+  for (vector<string>::iterator it = output.begin(); it != output.end(); ++it) {
+    string filename = this->getCoordTileById(*it);
+    if (Indexer::fileExists(filename)) {
+      filteredOutput->push_back(*it);
+    }
+  }
+
+  return filteredOutput;
 }
 
-
+// Checks that file exists
+bool Indexer::fileExists(string filename) {
+  if( access( filename.c_str(), F_OK ) != -1 ) {
+    // file exists
+    return true;
+  }
+  return false;
+}

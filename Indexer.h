@@ -18,6 +18,7 @@ class Indexer {
     int stride;
 
     map<int, vector<string>> attrToTileMap;
+    vector<string> *tileids;
 
     // Constructor
     Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride);
@@ -26,10 +27,13 @@ class Indexer {
     ~Indexer();
     
     // Return tiles for attribute
-    vector<string> findTilesByAttribute(int attrIndex);
+    vector<string> * findTilesByAttribute(int attrIndex);
 
+    string getAttrTileById(int attrIndex, string tileid);
+    string getCoordTileById(string tileid);
   private:
     vector<string> *generateTileIds();
+    bool fileExists(string filename);
 };
 
 #endif
