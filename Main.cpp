@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 2;
+  uint64_t mem_limit = 100; // number of bytes
 
   vector<int64_t> ranges;
   ranges.push_back(0);
@@ -22,11 +23,12 @@ int main(int argc, char *argv[]) {
   ranges.push_back(10);
   string csvfile = "data/tiny.csv";
 
-  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride);
+  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, mem_limit);
   cout << "Hello, world" << endl;
-  cout << loader->nDim << endl;
 
-
+  cout << "loader->load()" << endl;
+  loader->load();
+/*
   cout << "loader->read()" << endl;
   loader->read();
   cout << "loader->sort()" << endl;
@@ -59,6 +61,6 @@ int main(int argc, char *argv[]) {
   string subarrayName = "output-subarray0";
   Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
   s1->execute();
-
+*/
   return 0;
 }

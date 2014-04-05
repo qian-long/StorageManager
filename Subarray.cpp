@@ -5,7 +5,6 @@
 #include <set>
 #include "Subarray.h"
 
-
 using namespace std;
 
 Subarray::Subarray(string name, Indexer * indexer, vector<int64_t> * subranges, vector<int64_t> * ranges, int64_t stride) {
@@ -130,6 +129,7 @@ bool Subarray::inRange(vector<int64_t> * coords) {
 }
 
 // TODO: finish
+
 /*
 vector<string> Subarray::getInRangeWholeTiles() {
   vector<string> output;

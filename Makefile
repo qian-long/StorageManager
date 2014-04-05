@@ -15,7 +15,7 @@ $(EXECUTABLE): $(OBJECTS)
 all: $(SOURCES) $(EXECUTABLE)
 
 clean:
-	$(RM) -r $(EXECUTABLE) *.o *~ *.dat output*
+	$(RM) -r $(EXECUTABLE) *.o *~ *.dat output* data/*.tmp*
 
 cleandata:
 	$(RM) *.dat*

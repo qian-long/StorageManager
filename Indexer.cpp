@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <unistd.h>
+#include <algorithm>
 #include "Indexer.h"
 
 using namespace std;
@@ -83,7 +84,42 @@ vector<string> * Indexer::getAllAttrTilesByCoords(vector<int64_t> * coords) {
   string id = getTileIdByCoords(coords);
   return Indexer::getAllAttrTilesById(id);
 }
-// Private functions
+
+/*
+vector<string> * Indexer::getTilesByDimSubRange(vector<int64_t> * subranges) {
+  vector<int64_t>::iterator it = subranges->begin();
+  map<int, set<int>> wholeTilesMap;
+  map<int, set<int>> allTilesMap;
+
+  for (int i = 0; i < nDim; ++i) {
+    int64_t startRange = *(it++);
+    int64_t endRange = *(it++);
+
+    int pbegin = (int) floor((double) startRange / this->stride);
+    int wbegin = (int) cell((double) startRange / this->stride);
+
+    int wend = (int) floor((double) endRange / this->stride);
+    int pend = (int) cell((double) endRange / this->stride);
+
+    for (int j = pbegin; j < pend;; ++j) {
+      if (j >= wbegin && j < wend) {
+        wholeTilesMap[i].insert(j);
+      }
+      allTilesMap[i].insert(j);
+    }
+  }
+
+}
+*/
+/*
+vector<string> * Indexer::combination(vector<int> * subarrayIds) {
+
+  vector<int>::iterator it = subarrayIds->begin();
+  
+  vector<string> * output = new vector<string>();
+}
+*/
+// PRIVATE FUNCTIONS
 // Produce all combinations of [(0,...,x), (0,...,y), ...]
 vector<string> * Indexer::generateTileIds() {
   vector<int> splits;

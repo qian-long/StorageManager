@@ -20,12 +20,15 @@ class Loader {
     vector<int64_t> ranges;
     vector<Cell *> cells;
     int stride; // fixed logical tile size, range of logical coord space in one dimension
+    uint64_t mem_limit; // number of bytes used in main memory
     
     // Constructor
-    Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride);    
+    Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t mem_limit);    
     
     // Destructor
     ~Loader();
+
+    void load();
 
     // reads in input file
     void read();
@@ -39,6 +42,7 @@ class Loader {
     // TODO: make private
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
+    string getTileID(string line);
 };
 
 #endif

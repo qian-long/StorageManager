@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
+//#include <cstdlib>
 #include <string>
 #include <cmath>
 #include <bitset>
@@ -8,22 +10,90 @@
 #include <map>
 #include "Loader.h"
 
-#define TILENAME_TEMPLATE tile-%s-.dat
+//#define TILENAME_TEMPLATE tile-%s-.dat
+// fails for 10000000 and above, not enough memory??
+//#define LIMIT 1048576 // 1 MB
+#define LIMIT 50
+
 using namespace std;
 
 // Constructor
-Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride) {
+Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t mem_limit) {
   this->filename = filename;
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
   this->stride = stride;
+  this->mem_limit = mem_limit;
 }
 
 // Destructor
 // TODO
 Loader::~Loader() {
 
+}
+
+void Loader::load() {
+
+  ifstream infile(this->filename);
+  string line;
+  std::stringstream ss;
+  ofstream outfile;
+  string tmpfile = this->filename + ".tmp";
+  outfile.open(tmpfile, std::fstream::app);
+  if (infile.is_open()) {
+    while (getline(infile, line)) {
+      ss << line << "," << Loader::getTileID(line) << endl;
+      if (ss.str().size() >= LIMIT) {
+        cout << "dumping" << endl;
+        cout << ss.str();
+        outfile << ss.str();
+        // clears string stream buffer
+        ss.str(std::string());
+      }
+    }
+  }
+  infile.close();
+  outfile.close();
+
+  // Step 2, external sort
+  int tileIDCol = this->nDim + this->nAttr;
+  string tmpfile2 = this->filename + ".sorted";
+  string cmd = "sort -k" + std::to_string(tileIDCol) + " " + tmpfile + " -o " + tmpfile2;
+  std::system(cmd.c_str());
+
+  // removes first temp file
+  if (remove(tmpfile.c_str()) != 0 ) {
+    perror( "Error deleting file" );
+  }
+
+}
+
+string Loader::getTileID(string line) {
+  string output = string("");
+  vector<string> tmp;
+
+  size_t pos = 0;
+  // TODO: look into Boost library for more robust parsing
+  while ((pos = line.find_first_of(',')) != string::npos) {
+
+      string p = line.substr(0, pos);
+      tmp.push_back(p);
+      line = line.substr(pos + 1);
+  }
+  if (!line.empty()) {
+    tmp.push_back(line);
+  }
+
+  vector<string>::iterator it = tmp.begin();
+  for (int i = 0; i < nDim - 1; ++i) {
+    int dimID = std::atoi((*it).c_str()) / stride;
+    output += std::to_string(dimID) + "-";
+    ++it;
+  }
+
+  output += std::to_string(std::atoi((*it).c_str()));
+  return output;
 }
 
 void Loader::read() {

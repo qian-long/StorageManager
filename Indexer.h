@@ -30,6 +30,8 @@ class Indexer {
 
     // Returns attribute tile given attribute index and tileid
     string getAttrTileById(int attrIndex, string tileid);
+
+    // Returns coordinate tile given tile id
     string getCoordTileById(string tileid);
 
     // Returns all attribute tiles given tileid
@@ -40,9 +42,21 @@ class Indexer {
 
     // Returns all attribute tiles given coordinates
     vector<string> * getAllAttrTilesByCoords(vector<int64_t> * coords);
+
+    // Returns all tile ids tha fall in subranges
+    vector<string> * getTilesByDimSubRange(vector<int64_t> * subranges);
+
+    // Returns all whole tiles ids that fall completely within subranges
+    vector<string> * getWholeTilesByDimSubRange(vector<int64_t> * subranges);
+
+    // Returns all tile ids that partially overlap with subranges
+    vector<string> * getPartialTilesBySubRange(vector<int64_t> * subranges);
+
   private:
+    // Populates tileids
     vector<string> * generateTileIds();
-    
+
+    // Checks if filename exists
     bool fileExists(string filename);
 };
 
