@@ -55,20 +55,29 @@ void Loader::load() {
       }
     }
   }
+  cout << "final dumping" << endl;
+  cout << ss.str();
+  outfile << ss.str();
+  // clears string stream buffer
+  ss.str(std::string());
+
   infile.close();
   outfile.close();
 
   // Step 2, external sort
-  int tileIDCol = this->nDim + this->nAttr;
+  int tileIDCol = this->nDim + this->nAttr + 1;
   string tmpfile2 = this->filename + ".sorted";
   // TODO: this is incredibly unsecure...
-  string cmd = "sort -k" + std::to_string(tileIDCol) + " " + tmpfile + " -o " + tmpfile2;
+  string cmd = "sort -t, -k" + std::to_string(tileIDCol) + " " + tmpfile + " -o " + tmpfile2;
+  cout << "cmd: " << cmd;
   std::system(cmd.c_str());
 
   // removes first temp file
+  /*
   if (remove(tmpfile.c_str()) != 0 ) {
     perror( "Error deleting file" );
   }
+  */
 
 }
 
@@ -138,6 +147,8 @@ void Loader::tile() {
 
         string attrfilename = "tile-attrs[" + to_string(attrCounter) + "]-" + (*it) + ".dat";
         int64_t attr = *ita;
+        cout << "attrfilename: " << attrfilename << endl;
+        cout << "attr: " << *ita << endl;
         // Serializing data into 8 bytes
         char a[8];
         memcpy(a, &attr, 8);
@@ -223,12 +234,13 @@ string Loader::getTileID(string line) {
 
   vector<string>::iterator it = tmp.begin();
   for (int i = 0; i < nDim - 1; ++i) {
-    int dimID = std::atoi((*it).c_str()) / stride;
+    int dimID = strtoll((*it).c_str(), NULL, 10) / stride;
     output += std::to_string(dimID) + "-";
     ++it;
   }
 
-  output += std::to_string(std::atoi((*it).c_str()));
+  int last = strtoll((*it).c_str(), NULL, 10) / stride;
+  output += std::to_string(last);
   return output;
 }
 

@@ -34,10 +34,12 @@ class Loader {
     // Read input csv file, creates .sorted csv file that is sorted by tileid
     void load();
 
-    // divides sorted file into tiles and writes to disk
+    // Divides sorted file into tiles and writes to disk
     void tile();
 
+    // Helper function to write buffers to disk
     void writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid);
+
     // TODO: make private
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
