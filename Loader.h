@@ -44,7 +44,6 @@ class Loader {
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
     string getTileID(string line);
-    void int64ToChar(char a[], int64_t n);
 };
 
 #endif

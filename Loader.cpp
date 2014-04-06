@@ -73,12 +73,9 @@ void Loader::load() {
   std::system(cmd.c_str());
 
   // removes first temp file
-  /*
   if (remove(tmpfile.c_str()) != 0 ) {
     perror( "Error deleting file" );
   }
-  */
-
 }
 
 void Loader::tile() {
@@ -90,10 +87,8 @@ void Loader::tile() {
 
   // Hashmap of filename for attribute to its contents
   // One filename per attribute/tile combination
-  //map<string, stringstream> attrBufMap;
   map<string, string> attrBufMap;
   stringstream coordBuf; // use same buffer for all lines
-
   uint64_t usedMem = 0;
 
   if (infile.is_open()) {
@@ -125,9 +120,9 @@ void Loader::tile() {
         // Serializing data into 8 bytes
         char a[8];
         memcpy(a, &coord, 8);
-
         // writing to coordBuf stringstream
         coordBuf.write((char *) a, 8);
+
         // TODO: unused
         coords.push_back(atoi((*it).c_str()));
 
@@ -141,14 +136,13 @@ void Loader::tile() {
         ++it;
       }
 
+      // *it points to tileid
       // write to attribute buffers
       int attrCounter = 0;
       for (vector<int64_t>::iterator ita = attributes.begin(); ita != attributes.end(); ++ita) {
 
         string attrfilename = "tile-attrs[" + to_string(attrCounter) + "]-" + (*it) + ".dat";
         int64_t attr = *ita;
-        cout << "attrfilename: " << attrfilename << endl;
-        cout << "attr: " << *ita << endl;
         // Serializing data into 8 bytes
         char a[8];
         memcpy(a, &attr, 8);
@@ -157,20 +151,18 @@ void Loader::tile() {
       }
       usedMem += (nDim + nAttr) * 8;
 
-      // flush to file if buffers are full
+      // write to disk when tileid changes
       if (currentTileID.compare(*it) != 0) {
         // new tile
-        // write current tile buffers to tile files
 
-        if (currentTileID.compare("") != 0) {
-          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
-        }
+        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, *it);
         // assign new tileid
         currentTileID = *it;
       }
       else {
         currentTileID = *it;
         if (usedMem > LIMIT) {
+          // flush to file if buffers are full
           cout << "memory reached, flushing to disk" << endl;
           // flush buffers to disk
           Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
@@ -203,11 +195,7 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
     attrfile.close();
   }
 
-  // close all files
   coordFile.close();
-}
-void Loader::int64ToChar(char a[], int64_t n) {
-  std::memcpy(a, &n, 8);
 }
 
 /*
@@ -255,6 +243,7 @@ bool sortByMorton(Cell *c1, Cell *c2) {
 //       use shiftCoord helper
 // http://www-graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
 // TODO: only works for 32 bit x, y
+// Unused
 uint64_t Loader::mortonEncode2D(uint64_t x, uint64_t y) {
 
 
@@ -274,6 +263,7 @@ uint64_t Loader::mortonEncode2D(uint64_t x, uint64_t y) {
 }
 
 // Morton ordering algorithm needs nonegative numbers
+// Unused
 uint64_t Loader::shiftCoord(int64_t coord, int64_t min) {
   if (min < 0) {
     return (uint64_t) (-1 * min + coord);
