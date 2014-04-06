@@ -28,6 +28,18 @@ int main(int argc, char *argv[]) {
 
   cout << "loader->load()" << endl;
   loader->load();
+  cout << "loader->tile2()" << endl;
+  loader->tile2();
+  int num = 1;
+  // Taking first byte
+  if(*(char *)&num == 1)
+  {
+        printf("\nLittle-Endian\n");
+  }
+  else
+  {
+        printf("Big-Endian\n");
+  }
 /*
   cout << "loader->read()" << endl;
   loader->read();

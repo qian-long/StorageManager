@@ -3,10 +3,14 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <sstream>
 #include "Cell.h"
 
 using std::vector;
 using std::string;
+using std::map;
+using std::stringstream;
 class Cell;
 
 class Loader {
@@ -38,11 +42,14 @@ class Loader {
 
     // divides sorted file into tiles and writes to disk
     void tile();
+    void tile2();
 
+    void writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid);
     // TODO: make private
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
     string getTileID(string line);
+    void int64ToChar(char a[], int64_t n);
 };
 
 #endif

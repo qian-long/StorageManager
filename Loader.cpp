@@ -2,8 +2,9 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
-//#include <cstdlib>
+#include <cstdlib>
 #include <string>
+#include <cstring>
 #include <cmath>
 #include <bitset>
 #include <algorithm>
@@ -41,6 +42,7 @@ void Loader::load() {
   ofstream outfile;
   string tmpfile = this->filename + ".tmp";
   outfile.open(tmpfile, std::fstream::app);
+  // TODO figure out what is happening with read buffer
   if (infile.is_open()) {
     while (getline(infile, line)) {
       ss << line << "," << Loader::getTileID(line) << endl;
@@ -59,6 +61,7 @@ void Loader::load() {
   // Step 2, external sort
   int tileIDCol = this->nDim + this->nAttr;
   string tmpfile2 = this->filename + ".sorted";
+  // TODO: this is incredibly unsecure...
   string cmd = "sort -k" + std::to_string(tileIDCol) + " " + tmpfile + " -o " + tmpfile2;
   std::system(cmd.c_str());
 
@@ -68,6 +71,139 @@ void Loader::load() {
   }
 
 }
+
+void Loader::tile2() {
+  string sortedfile = this->filename + ".sorted";
+  ifstream infile(sortedfile);
+
+  string line;
+  string currentTileID;
+
+  // Hashmap of filename for attribute to its contents
+  // One filename per attribute/tile combination
+  //map<string, stringstream> attrBufMap;
+  map<string, string> attrBufMap;
+  stringstream coordBuf; // use same buffer for all lines
+
+  uint64_t usedMem = 0;
+
+  if (infile.is_open()) {
+    while (getline(infile, line)) {
+      vector<string> lineElements;
+      size_t pos = 0;
+      // TODO: look into Boost library for more robust parsing
+      while ((pos = line.find_first_of(',')) != string::npos) {
+
+          string p = line.substr(0, pos);
+          lineElements.push_back(p);
+          line = line.substr(pos + 1);
+      }
+      if (!line.empty()) {
+        lineElements.push_back(line);
+      }
+
+      // iterate through split vector to separate into coordinates and attributes
+
+      // Construct cell abstraction from each row
+      vector<int64_t> coords;
+      vector<int64_t> attributes;
+      vector<string>::iterator it = lineElements.begin();
+
+      // Coordinates
+      for (int i = 0; i < nDim; i++) {
+        int64_t coord = (int64_t)strtoll((*it).c_str(), NULL, 10);
+
+        // Serializing data into 8 bytes
+        char a[8];
+        memcpy(a, &coord, 8);
+
+        // writing to coordBuf stringstream
+        coordBuf.write((char *) a, 8);
+        // TODO: unused
+        coords.push_back(atoi((*it).c_str()));
+
+        ++it;
+      }
+
+      // Attributes
+      for (int i = 0; i < nAttr; i++) {
+        int64_t attr = (int64_t)strtoll((*it).c_str(), NULL, 10);
+        attributes.push_back(attr);
+        ++it;
+      }
+
+      // write to attribute buffers
+      int attrCounter = 0;
+      for (vector<int64_t>::iterator ita = attributes.begin(); ita != attributes.end(); ++ita) {
+
+        string attrfilename = "tile-attrs[" + to_string(attrCounter) + "]-" + (*it) + ".dat";
+        int64_t attr = *ita;
+        // Serializing data into 8 bytes
+        char a[8];
+        memcpy(a, &attr, 8);
+        attrBufMap[attrfilename].append(a, 8);
+        ++attrCounter;
+      }
+      usedMem += (nDim + nAttr) * 8;
+
+      // flush to file if buffers are full
+      if (currentTileID.compare(*it) != 0) {
+        // new tile
+        // write current tile buffers to tile files
+
+        if (currentTileID.compare("") != 0) {
+          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+        }
+        // assign new tileid
+        currentTileID = *it;
+      }
+      else {
+        currentTileID = *it;
+        if (usedMem > LIMIT) {
+          cout << "memory reached, flushing to disk" << endl;
+          // flush buffers to disk
+          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+        }
+      }
+    }
+
+  }
+}
+
+void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid) {
+  string fileCoords = "tile-coords-" + tileid + ".dat";
+  ofstream coordFile;
+  coordFile.open(fileCoords, std::fstream::app);
+  coordFile << coordBuf->str();
+
+  // reset coordBuf
+  coordBuf->str(std::string());
+
+  // Write attribute buffers to corresponding files
+  for (map<string, string>::iterator it = attrBufMap->begin(); it != attrBufMap->end(); ++it) {
+    string key = it->first;
+
+    ofstream attrfile;
+    attrfile.open(key, std::fstream::app);
+    attrfile << (*attrBufMap)[key];
+
+    // reset attfBuf
+    (*attrBufMap)[key].clear();
+    attrfile.close();
+  }
+
+  // close all files
+  coordFile.close();
+}
+void Loader::int64ToChar(char a[], int64_t n) {
+  std::memcpy(a, &n, 8);
+}
+
+/*
+void Loader::compress() {
+
+}
+*/
 
 string Loader::getTileID(string line) {
   string output = string("");
