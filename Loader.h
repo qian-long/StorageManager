@@ -22,7 +22,6 @@ class Loader {
     int64_t nDim;
     int64_t nAttr;
     vector<int64_t> ranges;
-    vector<Cell *> cells;
     int stride; // fixed logical tile size, range of logical coord space in one dimension
     uint64_t mem_limit; // number of bytes used in main memory
     
@@ -32,17 +31,11 @@ class Loader {
     // Destructor
     ~Loader();
 
+    // Read input csv file, creates .sorted csv file that is sorted by tileid
     void load();
-
-    // reads in input file
-    void read();
-
-    // creates a temporary sorted file
-    void sort();
 
     // divides sorted file into tiles and writes to disk
     void tile();
-    void tile2();
 
     void writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid);
     // TODO: make private
