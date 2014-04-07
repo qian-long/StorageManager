@@ -38,6 +38,8 @@ void Filter::filter() {
   }
 }
 
+// Filters one tile/attribute pair
+// Read from unfiltered tiles, write into new tiles
 void Filter::filterTile(string tileid) {
   string coordTile = indexer->getCoordTileById(tileid);
   // work with compressed data
@@ -77,6 +79,7 @@ void Filter::filterTile(string tileid) {
   uint64_t creadsize = 0;
   uint64_t areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
   uint64_t coordIndex = 0;
+  uint64_t usedMem = 0;
   // read attribute tile, scan it, then read the corresponding amount from coord tile
   while (areadsize) {
     // scan through attribute tile to figure how how much of coords tile to read
@@ -105,6 +108,7 @@ void Filter::filterTile(string tileid) {
         outAttrBuf.write((char *)(&attribute), 8);
         // write all the coordinates associated with that attribute
         outCoordBuf.write((char *)(inCoordBuf + coordIndex), 8 * indexer->nDim * occurrence);
+        usedMem += 16 + 8 * indexer->nDim * occurrence;
       }
 
       // next coordinate index
@@ -116,15 +120,23 @@ void Filter::filterTile(string tileid) {
 
     // TODO check memory limit
     // write to file
-    cout << endl;
-    cout << "writing to file" << endl;
-    outCoordFile << outCoordBuf.str();
-    outAttrFile << outAttrBuf.str();
+    if (usedMem > LIMIT) { 
+      cout << endl;
+      cout << "memory reached, writing to file" << endl;
+      outCoordFile << outCoordBuf.str();
+      outAttrFile << outAttrBuf.str();
 
-    // reset buffers
-    outCoordBuf.str(std::string());
-    outAttrBuf.str(std::string());
+      // reset buffers and usedMem
+      outCoordBuf.str(std::string());
+      outAttrBuf.str(std::string());
+      usedMem = 0;
+    }
   }
+
+  // Final flush
+  cout << "final flush" << endl;
+  outCoordFile << outCoordBuf.str();
+  outAttrFile << outAttrBuf.str();
 
   // Close all files
   fclose(attrFilep);
