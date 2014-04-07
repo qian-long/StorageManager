@@ -3,6 +3,7 @@
 
 #include "Indexer.h"
 
+// Filters on compressed data
 class Filter {
   public:
     Indexer * indexer; 
@@ -27,6 +28,8 @@ class Filter {
     void filterLE(int64_t num);
     */
     void filter();
+    void filter2();
+    void filterTile(string tileid);
     // Assumes that expression has been linearlized into ands and ors
     // TODO: implement later for composite expressions
     void buildLinearExpression();

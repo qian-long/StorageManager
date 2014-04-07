@@ -31,6 +31,9 @@ class Indexer {
     // Returns attribute tile given attribute index and tileid
     string getAttrTileById(int attrIndex, string tileid);
 
+    // Returns RLE attribute tile given attribute index and tileid
+    string getRLEAttrTileById(int attrIndex, string tileid);
+
     // Returns coordinate tile given tile id
     string getCoordTileById(string tileid);
 

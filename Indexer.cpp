@@ -50,6 +50,9 @@ string Indexer::getAttrTileById(int attrIndex, string tileid) {
   return filename;
 }
 
+string Indexer::getRLEAttrTileById(int attrIndex, string tileid) {
+  return "rle-tile-attrs[" + to_string(attrIndex) + "]-" + tileid + ".dat";
+}
 
 string Indexer::getCoordTileById(string tileid) {
 

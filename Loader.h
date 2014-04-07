@@ -40,7 +40,8 @@ class Loader {
     // Helper function to write buffers to disk
     void writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid);
 
-    // write out new file, delete old file
+    // write out new file
+    // TODO: delete uncompressed tile?
     void compressTile(const char * filename);
 
     // TODO: make private

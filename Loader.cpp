@@ -90,7 +90,7 @@ void Loader::tile() {
   map<string, string> attrBufMap;
   stringstream coordBuf; // use same buffer for all lines
   uint64_t usedMem = 0;
-
+  bool veryfirst = true;
   if (infile.is_open()) {
     while (getline(infile, line)) {
       vector<string> lineElements;
@@ -116,14 +116,7 @@ void Loader::tile() {
       // Coordinates
       for (int i = 0; i < nDim; i++) {
         int64_t coord = (int64_t)strtoll((*it).c_str(), NULL, 10);
-
-        // Serializing data into 8 bytes
-        // writing to coordBuf stringstream
-        coordBuf.write((char *)(&coord), 8);
-
-        // TODO: unused
         coords.push_back(atoi((*it).c_str()));
-
         ++it;
       }
 
@@ -132,6 +125,41 @@ void Loader::tile() {
         int64_t attr = (int64_t)strtoll((*it).c_str(), NULL, 10);
         attributes.push_back(attr);
         ++it;
+      }
+
+      
+      if (veryfirst) {
+        currentTileID = *it;
+        veryfirst = false;
+      }
+
+      // write to disk when tileid changes
+      if (currentTileID.compare(*it) != 0) {
+        // new tile
+        cout << "NEW TILE, flushing to disk" << endl;
+        cout << "currentTileID: " << currentTileID << endl;
+        cout << "*it: " << *it << endl;
+        //Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, *it);
+
+        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+        // assign new tileid
+        currentTileID = *it;
+      }
+      else {
+        currentTileID = *it;
+        if (usedMem > LIMIT) {
+          // flush to file if buffers are full
+          cout << "memory reached, flushing to disk" << endl;
+          // flush buffers to disk
+          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+          usedMem = 0;
+        }
+      }
+      // write to coordbuf
+      for (vector<int64_t>::iterator itc = coords.begin(); itc != coords.end(); ++itc) {
+        int64_t coord = *itc;
+        // Serializing data into 8 bytes
+        coordBuf.write((char *)(&coord), 8);
       }
 
       // *it points to tileid
@@ -147,27 +175,11 @@ void Loader::tile() {
       }
       usedMem += (nDim + nAttr) * 8;
 
-      // write to disk when tileid changes
-      if (currentTileID.compare(*it) != 0) {
-        // new tile
-
-        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, *it);
-        // assign new tileid
-        currentTileID = *it;
-      }
-      else {
-        currentTileID = *it;
-        if (usedMem > LIMIT) {
-          // flush to file if buffers are full
-          cout << "memory reached, flushing to disk" << endl;
-          // flush buffers to disk
-          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
-          usedMem = 0;
-        }
-      }
     }
 
     // Final flush
+    cout << "FINAL FLUSH" << endl;
+    cout << "currentTileID: " << currentTileID << endl;
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
   }
 
@@ -184,6 +196,7 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
   string fileCoords = "tile-coords-" + tileid + ".dat";
   ofstream coordFile;
   coordFile.open(fileCoords, std::fstream::app);
+  cout << "writing to fileCoords: " << fileCoords << endl;
   coordFile << coordBuf->str();
 
   // reset coordBuf
@@ -194,6 +207,7 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
     string key = it->first;
     ofstream attrfile;
     attrfile.open(key, std::fstream::app);
+    cout << "writing to key: " << key << endl;
     attrfile << (*attrBufMap)[key];
 
     // reset attfBuf

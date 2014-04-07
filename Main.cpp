@@ -36,13 +36,6 @@ int main(int argc, char *argv[]) {
   loader->tile();
 
 
-/*
-  cout << "loader->read()" << endl;
-  loader->read();
-  cout << "loader->sort()" << endl;
-  loader->sort();
-  cout << "loader->tile()" << endl;
-  loader->tile();
 
   Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride);
   int attrIndex = 0;
@@ -56,10 +49,11 @@ int main(int argc, char *argv[]) {
   int64_t val = 5;
   string filtername = "output-filter-GT-5";
   Filter * f1 = new Filter(indexer, attrIndex, ftype, val, filtername);
-  cout << "Filter: " << endl;
-  f1->filter();
+  cout << "\n\nFILTER: " << endl;
+  //f1->filter2();
+  f1->filterTile("2-1");
 
-
+/*
   cout << "Subarray: " << endl;
   vector<int64_t> subranges;
   subranges.push_back(3);
