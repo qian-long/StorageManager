@@ -235,7 +235,7 @@ void Loader::compressTile(const char * filename) {
         cout << "writing occurrence: " << occurrence << endl;
         cout << "writing currentNum: " << currentNum << endl;
         outBuf.write((char *)(&occurrence), 8);
-        outBuf.write((char *)(&readNum), 8);
+        outBuf.write((char *)(&currentNum), 8);
         currentNum = readNum;
         occurrence = 1;
       }
@@ -255,7 +255,7 @@ void Loader::compressTile(const char * filename) {
         cout << "writing occurrence: " << occurrence << endl;
         cout << "writing currentNum: " << currentNum << endl;
         outBuf.write((char *)(&occurrence), 8);
-        outBuf.write((char *)(&readNum), 8);
+        outBuf.write((char *)(&currentNum), 8);
         currentNum = readNum;
         occurrence = 1;
       }
