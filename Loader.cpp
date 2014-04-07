@@ -118,10 +118,8 @@ void Loader::tile() {
         int64_t coord = (int64_t)strtoll((*it).c_str(), NULL, 10);
 
         // Serializing data into 8 bytes
-        char a[8];
-        memcpy(a, &coord, 8);
         // writing to coordBuf stringstream
-        coordBuf.write((char *) a, 8);
+        coordBuf.write((char *)(&coord), 8);
 
         // TODO: unused
         coords.push_back(atoi((*it).c_str()));
@@ -144,9 +142,7 @@ void Loader::tile() {
         string attrfilename = "tile-attrs[" + to_string(attrCounter) + "]-" + (*it) + ".dat";
         int64_t attr = *ita;
         // Serializing data into 8 bytes
-        char a[8];
-        memcpy(a, &attr, 8);
-        attrBufMap[attrfilename].append(a, 8);
+        attrBufMap[attrfilename].append((char *)(&attr), 8);
         ++attrCounter;
       }
       usedMem += (nDim + nAttr) * 8;
@@ -232,8 +228,8 @@ void Loader::compressTile(const char * filename) {
     if (!veryfirst) {
       if (currentNum != readNum) {
 
-        cout << "writing occurrence: " << occurrence << endl;
-        cout << "writing currentNum: " << currentNum << endl;
+        //cout << "writing occurrence: " << occurrence << endl;
+        //cout << "writing currentNum: " << currentNum << endl;
         outBuf.write((char *)(&occurrence), 8);
         outBuf.write((char *)(&currentNum), 8);
         currentNum = readNum;
@@ -252,8 +248,8 @@ void Loader::compressTile(const char * filename) {
       readNum = *((int64_t *)(buffer + i));
 
       if (currentNum != readNum) {
-        cout << "writing occurrence: " << occurrence << endl;
-        cout << "writing currentNum: " << currentNum << endl;
+        //cout << "writing occurrence: " << occurrence << endl;
+        //cout << "writing currentNum: " << currentNum << endl;
         outBuf.write((char *)(&occurrence), 8);
         outBuf.write((char *)(&currentNum), 8);
         currentNum = readNum;
@@ -271,12 +267,11 @@ void Loader::compressTile(const char * filename) {
   }
 
   // compare last int64
-  // TODO
-  cout << "last number: " << readNum << endl;
+  //cout << "last number: " << readNum << endl;
   if (currentNum == readNum) {
     // write to out buffer
-    cout << "writing occurrence: " << occurrence << endl;
-    cout << "writing currentNum: " << currentNum << endl;
+    //cout << "writing occurrence: " << occurrence << endl;
+    //cout << "writing currentNum: " << currentNum << endl;
     outBuf.write((char *)(&occurrence), 8);
     outBuf.write((char *)(&currentNum), 8);
   }
