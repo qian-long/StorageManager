@@ -22,9 +22,8 @@ int main(int argc, char *argv[]) {
   ranges.push_back(0);
   ranges.push_back(10);
   //string csvfile = "data/tiny.csv";
-  //string csvfile = "data/compress-tiny1.csv";
-  string csvfile = "data/compress-tiny.csv";
-  
+  string csvfile = "data/compress-tiny1.csv";
+  //string csvfile = "data/compress-tiny.csv";
   //string csvfile = "data/compress-tiny2.csv";
 
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, mem_limit);
@@ -46,12 +45,12 @@ int main(int argc, char *argv[]) {
 
 
   Filter::FilterType ftype = Filter::FilterType::GT;
-  int64_t val = 5;
-  string filtername = "output-filter-GT-5";
+  int64_t val = 4;
+  string filtername = "output-filter-GT-4";
   Filter * f1 = new Filter(indexer, attrIndex, ftype, val, filtername);
   cout << "\n\nFILTER: " << endl;
-  //f1->filter2();
-  f1->filterTile("2-1");
+  f1->filter2();
+  //f1->filterTile("2-1");
 
 /*
   cout << "Subarray: " << endl;

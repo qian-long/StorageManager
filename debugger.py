@@ -55,6 +55,28 @@ def uncompressRLE(filename):
   in_file.close()
   out_file.close()
 
+def convert_dir(dirname):
+  print "dirname: ", dirname
+  nDim = 2
+  nAttr = 1
+  # convert coordinate tiles from binary to csv
+  coord_tiles = fnmatch.filter(os.listdir(dirname),'tile-coords-*.dat')
+  for tile in coord_tiles:
+    print "tile", tile
+    binaryToCSV(dirname + "/" + tile, nDim)
+
+  attr_tiles = fnmatch.filter(os.listdir(dirname), 'tile-attrs*.dat')
+  for tile in attr_tiles:
+    print "attr tile", tile
+    binaryToCSV(dirname + "/" + tile, nAttr)
+
+  # uncompress rle compressed attribute tiles
+  rle_tiles = fnmatch.filter(os.listdir(dirname), 'rle-*.dat')
+  for tile in rle_tiles:
+    print "rle tile", tile
+    uncompressRLE(dirname + "/" + tile)
+
+
 def main():
   nDim = 2
   nAttr = 1
@@ -74,4 +96,5 @@ def main():
 
 if __name__ == "__main__":
   main()
+  convert_dir('output-filter-GT-4')
 

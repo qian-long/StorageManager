@@ -79,6 +79,7 @@ void Filter::filter() {
 }
 
 void Filter::filter2() {
+  // Create output directory
   // TODO: add better error handling
   if (mkdir(this->name.c_str(), S_IRWXU) != 0) {
     perror("something went wrong");
@@ -88,56 +89,7 @@ void Filter::filter2() {
   vector<string> * tileids = indexer->tileids;
 
   for (vector<string>::iterator it = tileids->begin(); it != tileids->end(); ++it) {
-    string coordTile = indexer->getCoordTileById(*it);
-    // work with compressed data
-    string rleAttrTile = indexer->getRLEAttrTileById(attrIndex, *it);
-    cout << "coordTile: " << coordTile << endl;
-    cout << "rleAttrTile: " << rleAttrTile << endl;
-
-    // input files
-    FILE * coordFilep;
-    FILE * attrFilep;
-    coordFilep = fopen(coordTile.c_str(), "r");
-    if (!coordFilep) {
-      perror("Coord tile doesn't exist");
-    }
-    attrFilep = fopen(rleAttrTile.c_str(), "r");
-    if (!attrFilep) {
-      perror("RLE Attr tile doesn't exist");
-    }
-    uint64_t limit = (LIMIT/8) * 8;
-    char inCoordBuf[LIMIT];
-    char inAttrBuf[LIMIT];
-    stringstream outCoordBuf;
-    stringstream outAttrBuf;
-
-    // TODO finish!!!
-    uint64_t creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep);
-    uint64_t areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
-    uint64_t coordIndex = 0;
-    while(creadsize && areadsize) {
-      cout << "creadsize: " << creadsize << endl;
-      cout << "areadsize: " << areadsize << endl;
-      // Walk coordinate and attribute file at the same time
-      for (uint64_t i = 0; i < areadsize; i = i + 16) {
-        int64_t occurrence = *((int64_t *)(inAttrBuf + i));
-        int64_t attribute = *((int64_t *)(inAttrBuf + i + 8));
-        cout << "occurrence: " << occurrence << endl;
-        cout << "attribute: " << attribute << endl;
-        if (Filter::evaluate(attribute)) {
-          outAttrBuf.write((char *)(&occurrence), 8);
-          outAttrBuf.write((char *)(&attribute), 8);
-          // write all the coordinates associated with that attribute
-          outCoordBuf.write((char *)(inCoordBuf + coordIndex), 8 * indexer->nDim * occurrence);
-        }
-        // next coordinate index
-        coordIndex += indexer->nDim * 8 * occurrence;
-      }
-      // Next read
-      creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep);
-      areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
-
-    }
+    Filter::filterTile(*it);
   }
 }
 
@@ -145,8 +97,6 @@ void Filter::filterTile(string tileid) {
   string coordTile = indexer->getCoordTileById(tileid);
   // work with compressed data
   string rleAttrTile = indexer->getRLEAttrTileById(attrIndex, tileid);
-  cout << "coordTile: " << coordTile << endl;
-  cout << "rleAttrTile: " << rleAttrTile << endl;
 
   // input files
   FILE * coordFilep;
@@ -160,22 +110,30 @@ void Filter::filterTile(string tileid) {
     perror("RLE Attr tile doesn't exist");
   }
   //uint64_t limit = (LIMIT/8) * 8;
+  // TODO adjust
   uint64_t limit = 16;
   char inCoordBuf[1024];
   char inAttrBuf[LIMIT];
   stringstream outCoordBuf;
   stringstream outAttrBuf;
 
-  stringstream coordLeftOver;
-  stringstream attrLeftOver;
-  // TODO finish!!!
-  //uint64_t creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep);
+  ofstream outCoordFile;
+  ofstream outAttrFile;
+  string cfilename = this->name + "/" + coordTile;
+  string afilename = this->name + "/" + rleAttrTile;
+
+  if (!outCoordFile.is_open()) {
+    outCoordFile.open(cfilename, std::fstream::app);
+  }
+  if (!outAttrFile.is_open()) {
+    outAttrFile.open(afilename, std::fstream::app);
+  }
+
   uint64_t creadsize = 0;
   uint64_t areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
   uint64_t coordIndex = 0;
   // read attribute tile, scan it, then read the corresponding amount from coord tile
   while (areadsize) {
-    cout << "areadsize: " << areadsize << endl;
     // scan through attribute tile to figure how how much of coords tile to read
     uint64_t coordCount = 0;
     for (uint64_t i = 0; i < areadsize; i = i + 16) {
@@ -187,47 +145,47 @@ void Filter::filterTile(string tileid) {
       coordCount += occurrence;
     }
     // read coordCount * nDim * 8 bytes from coordFile
-    cout << "coordCount * indexer->nDim * 8:" << coordCount * indexer->nDim * 8 << endl;
+    cout << "num bytes to read from coordFilep: " << coordCount * indexer->nDim * 8 << endl;
     creadsize = fread((char *)inCoordBuf, 1, coordCount * indexer->nDim * 8, coordFilep);
     cout << "creadsize: " << creadsize << endl;
-    // Next read
-    areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
-  }
-  /*
-  while(creadsize && areadsize) {
-    // process leftover from previous iteration
-    
-    cout << "creadsize: " << creadsize << endl;
-    cout << "areadsize: " << areadsize << endl;
+
+    // reset coordIndex
+    coordIndex = 0;
     // Walk coordinate and attribute file at the same time
-    uint64_t i;
-    for (i = 0; i < areadsize; i = i + 16) {
-      int64_t occurrence = *((int64_t *)(inAttrBuf + i));
+    for (uint64_t i = 0; i < areadsize; i = i + 16) {
+      uint64_t occurrence = *((int64_t *)(inAttrBuf + i));
       int64_t attribute = *((int64_t *)(inAttrBuf + i + 8));
-      cout << "occurrence: " << occurrence << endl;
-      cout << "attribute: " << attribute << endl;
       if (Filter::evaluate(attribute)) {
         outAttrBuf.write((char *)(&occurrence), 8);
         outAttrBuf.write((char *)(&attribute), 8);
         // write all the coordinates associated with that attribute
         outCoordBuf.write((char *)(inCoordBuf + coordIndex), 8 * indexer->nDim * occurrence);
       }
+
       // next coordinate index
       coordIndex += this->indexer->nDim * 8 * occurrence;
     }
-    cout << "coordIndex: " << coordIndex << endl;
-    cout << "coord left overs: " << creadsize - coordIndex << endl;
-    coordLeftOver.write((char *)(inCoordBuf + coordIndex), creadsize - coordIndex);
-    uint64_t prevI = i - 16;
-    cout << "attr leftover: " << areadsize - prevI << endl;
-    attrLeftOver.write((char *)(inAttrBuf + prevI), areadsize - prevI);
+
     // Next read
-    creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep);
     areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
+
+    // TODO check memory limit
+    // write to file
+    cout << endl;
+    cout << "writing to file" << endl;
+    outCoordFile << outCoordBuf.str();
+    outAttrFile << outAttrBuf.str();
+
+    // reset buffers
+    outCoordBuf.str(std::string());
+    outAttrBuf.str(std::string());
   }
 
-  */
-  // process leftovers
+  // Close all files
+  fclose(attrFilep);
+  fclose(coordFilep);
+  outCoordFile.close();
+  outAttrFile.close();
 }
 
 bool Filter::evaluate(int64_t attrval) {

@@ -116,7 +116,7 @@ void Loader::tile() {
       // Coordinates
       for (int i = 0; i < nDim; i++) {
         int64_t coord = (int64_t)strtoll((*it).c_str(), NULL, 10);
-        coords.push_back(atoi((*it).c_str()));
+        coords.push_back(coord);
         ++it;
       }
 
@@ -127,7 +127,6 @@ void Loader::tile() {
         ++it;
       }
 
-      
       if (veryfirst) {
         currentTileID = *it;
         veryfirst = false;
