@@ -49,8 +49,7 @@ int main(int argc, char *argv[]) {
   string filtername = "output-filter-GT-4";
   Filter * f1 = new Filter(indexer, attrIndex, ftype, val, filtername);
   cout << "\n\nFILTER: " << endl;
-  f1->filter2();
-  //f1->filterTile("2-1");
+  f1->filter();
 
 /*
   cout << "Subarray: " << endl;

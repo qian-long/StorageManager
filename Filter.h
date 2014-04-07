@@ -27,8 +27,8 @@ class Filter {
     void filterLT(int64_t num);
     void filterLE(int64_t num);
     */
+    //void filter();
     void filter();
-    void filter2();
     void filterTile(string tileid);
     // Assumes that expression has been linearlized into ands and ors
     // TODO: implement later for composite expressions
