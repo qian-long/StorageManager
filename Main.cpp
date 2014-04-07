@@ -23,9 +23,9 @@ int main(int argc, char *argv[]) {
   ranges.push_back(10);
   //string csvfile = "data/tiny.csv";
   //string csvfile = "data/compress-tiny1.csv";
-  //string csvfile = "data/compress-tiny.csv";
+  string csvfile = "data/compress-tiny.csv";
   
-  string csvfile = "data/compress-tiny2.csv";
+  //string csvfile = "data/compress-tiny2.csv";
 
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, mem_limit);
   cout << "Hello, world" << endl;
@@ -35,8 +35,6 @@ int main(int argc, char *argv[]) {
   cout << "loader->tile()" << endl;
   loader->tile();
 
-  cout << "loader->compress(tile-attrs[0]-3-1.dat)" << endl;
-  loader->compressTile("tile-attrs[0]-3-1.dat");
 
 /*
   cout << "loader->read()" << endl;

@@ -162,10 +162,20 @@ void Loader::tile() {
           cout << "memory reached, flushing to disk" << endl;
           // flush buffers to disk
           Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+          usedMem = 0;
         }
       }
     }
 
+    // Final flush
+    Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+  }
+
+  // Create compressed binary attributes tiles
+  for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
+    string key = it->first;
+    cout << "Compressing tile: " << key << endl;
+    Loader::compressTile(key.c_str());
   }
 }
 
@@ -182,7 +192,6 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
   // Write attribute buffers to corresponding files
   for (map<string, string>::iterator it = attrBufMap->begin(); it != attrBufMap->end(); ++it) {
     string key = it->first;
-
     ofstream attrfile;
     attrfile.open(key, std::fstream::app);
     attrfile << (*attrBufMap)[key];
@@ -267,7 +276,6 @@ void Loader::compressTile(const char * filename) {
   }
 
   // compare last int64
-  //cout << "last number: " << readNum << endl;
   if (currentNum == readNum) {
     // write to out buffer
     //cout << "writing occurrence: " << occurrence << endl;
