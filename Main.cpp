@@ -21,15 +21,20 @@ int main(int argc, char *argv[]) {
   ranges.push_back(10);
   ranges.push_back(0);
   ranges.push_back(10);
-  string csvfile = "data/tiny.csv";
+  //string csvfile = "data/tiny.csv";
+  //string csvfile = "data/compress-tiny1.csv";
+  string csvfile = "data/compress-tiny.csv";
 
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, mem_limit);
   cout << "Hello, world" << endl;
 
   cout << "loader->load()" << endl;
   loader->load();
-  cout << "loader->tile2)" << endl;
+  cout << "loader->tile()" << endl;
   loader->tile();
+
+  cout << "loader->compress(tile-attrs[0]-3-1.dat)" << endl;
+  loader->compressTile("tile-attrs[0]-3-1.dat");
 
 /*
   cout << "loader->read()" << endl;

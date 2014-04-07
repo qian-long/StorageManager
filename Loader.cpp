@@ -174,6 +174,7 @@ void Loader::tile() {
 }
 
 void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid) {
+  cout << "writing Tile bufs to disk" << endl;
   string fileCoords = "tile-coords-" + tileid + ".dat";
   ofstream coordFile;
   coordFile.open(fileCoords, std::fstream::app);
@@ -198,11 +199,95 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
   coordFile.close();
 }
 
-/*
-void Loader::compress() {
 
+// attributes take up 8 bytes
+// output format: 8 bytes for occurrence, 8 bytes for value
+// Uses Run Length Encoding
+void Loader::compressTile(const char * filename) {
+  FILE * filep;
+  filep = fopen(filename, "r");
+  if (filep == NULL) {
+    perror("file doesn't exist");
+  }
+  // Read exact int64_t boundaries
+  uint64_t limit = (LIMIT/8) * 8;
+  char buffer[LIMIT];
+  stringstream outBuf;
+
+  // holds current number for occurrence counting
+  // read first number
+  bool veryfirst = true;
+  int64_t currentNum = 0;
+  int64_t occurrence = 1;
+  int64_t readNum = 0;
+
+  ofstream outFile;
+  outFile.open("rle-" + string(filename), std::fstream::app);
+  while (uint64_t readsize = fread((char *)buffer, 1, limit, filep)) {
+    // process the block
+    // Little endian
+
+    // start at second int64
+    readNum = *((int64_t *)(buffer));
+    if (!veryfirst) {
+      if (currentNum != readNum) {
+
+        cout << "writing occurrence: " << occurrence << endl;
+        cout << "writing currentNum: " << currentNum << endl;
+        outBuf.write((char *)(&occurrence), 8);
+        outBuf.write((char *)(&readNum), 8);
+        currentNum = readNum;
+        occurrence = 1;
+      }
+      else {
+          occurrence++;
+      }
+    }
+    else {
+      veryfirst = false;
+      currentNum = readNum;
+    }
+
+    for (uint64_t i = 8; i < readsize; i = i + 8) {
+      readNum = *((int64_t *)(buffer + i));
+
+      if (currentNum != readNum) {
+        cout << "writing occurrence: " << occurrence << endl;
+        cout << "writing currentNum: " << currentNum << endl;
+        outBuf.write((char *)(&occurrence), 8);
+        outBuf.write((char *)(&readNum), 8);
+        currentNum = readNum;
+        occurrence = 1;
+      }
+      else {
+        occurrence++;
+      }
+    }
+
+    // Write to output file
+    outFile << outBuf.str();
+    // reset buffer
+    outBuf.str(std::string());
+  }
+
+  // compare last int64
+  // TODO
+  cout << "last number: " << readNum << endl;
+  if (currentNum == readNum) {
+    // write to out buffer
+    cout << "writing occurrence: " << occurrence << endl;
+    cout << "writing currentNum: " << currentNum << endl;
+    outBuf.write((char *)(&occurrence), 8);
+    outBuf.write((char *)(&currentNum), 8);
+  }
+
+  // Write to output file
+  outFile << outBuf.str();
+  // reset buffer
+  outBuf.str(std::string());
+  outFile.close();
 }
-*/
+
 
 string Loader::getTileID(string line) {
   string output = string("");

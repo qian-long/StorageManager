@@ -4,6 +4,7 @@ import struct
 import os
 import fnmatch
 
+# Convert uncompressed binary to csv
 def binaryToCSV(filename, numPerLine):
   in_file = open(filename, 'r')
   line = in_file.read(8)

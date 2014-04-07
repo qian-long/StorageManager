@@ -40,6 +40,9 @@ class Loader {
     // Helper function to write buffers to disk
     void writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid);
 
+    // write out new file, delete old file
+    void compressTile(const char * filename);
+
     // TODO: make private
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
