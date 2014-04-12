@@ -21,8 +21,8 @@ int main(int argc, char *argv[]) {
   ranges.push_back(10);
   ranges.push_back(0);
   ranges.push_back(10);
-  //string csvfile = "data/tiny.csv";
-  string csvfile = "data/compress-tiny1.csv";
+  string csvfile = "data/tiny.csv";
+  //string csvfile = "data/compress-tiny1.csv";
   //string csvfile = "data/compress-tiny.csv";
   //string csvfile = "data/compress-tiny2.csv";
 

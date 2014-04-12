@@ -4,12 +4,14 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 #include <sstream>
 #include "Cell.h"
 
 using std::vector;
 using std::string;
 using std::map;
+using std::set;
 using std::stringstream;
 class Cell;
 
@@ -32,6 +34,7 @@ class Loader {
     ~Loader();
 
     // Read input csv file, creates .sorted csv file that is sorted by tileid
+    // creates index file containing all non-empty tile ids, used for indexing later
     void load();
 
     // Divides sorted file into tiles and writes to disk
@@ -44,7 +47,9 @@ class Loader {
     // TODO: delete uncompressed tile?
     void compressTile(const char * filename);
 
+
     // TODO: make private
+    void createIndexFile(set<string> * tileIDs);
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
     string getTileID(string line);

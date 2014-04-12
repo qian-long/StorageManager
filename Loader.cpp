@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <string>
+#include <set>
 #include <cstring>
 #include <cmath>
 #include <bitset>
@@ -42,10 +43,17 @@ void Loader::load() {
   ofstream outfile;
   string tmpfile = this->filename + ".tmp";
   outfile.open(tmpfile, std::fstream::app);
+
+  // Used for creating index file of non-empty tile IDs
+  set<string> tileIDset;
+
   // TODO figure out what is happening with read buffer
+  // Step 1: append tileid to the end of every line
   if (infile.is_open()) {
     while (getline(infile, line)) {
-      ss << line << "," << Loader::getTileID(line) << endl;
+      string tileid = Loader::getTileID(line);
+      tileIDset.insert(tileid);
+      ss << line << "," << tileid << endl;
       if (ss.str().size() >= LIMIT) {
         cout << "dumping" << endl;
         cout << ss.str();
@@ -76,6 +84,9 @@ void Loader::load() {
   if (remove(tmpfile.c_str()) != 0 ) {
     perror( "Error deleting file" );
   }
+
+  // Create index file for the indexer
+  Loader::createIndexFile(&tileIDset);
 }
 
 void Loader::tile() {
@@ -220,7 +231,7 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
 
 // attributes take up 8 bytes
 // output format: 8 bytes for occurrence, 8 bytes for value
-// Uses Run Length Encoding
+// Run Length Encoding Implementation
 void Loader::compressTile(const char * filename) {
   FILE * filep;
   filep = fopen(filename, "r");
@@ -331,6 +342,18 @@ string Loader::getTileID(string line) {
   int last = strtoll((*it).c_str(), NULL, 10) / stride;
   output += std::to_string(last);
   return output;
+}
+
+// Write each id to a new line
+// TODO: make more compact later
+void Loader::createIndexFile(set<string> * tileIDs) {
+  ofstream out;
+  // TODO: change name later
+  out.open("myindex.txt");
+  for (set<string>::iterator it = tileIDs->begin(); it != tileIDs->end(); ++it) {
+    out << *it << endl;
+  }
+  out.close();
 }
 
 bool sortByMorton(Cell *c1, Cell *c2) {
