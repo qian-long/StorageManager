@@ -20,6 +20,7 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string
 
   // Initialize maps
   this->tileids = this->generateTileIds();
+  this->tileidset = new set<string>(tileids->begin(), tileids->end());
 
   // Open and read index file
   ifstream indexIn(this->indexfile);
@@ -41,6 +42,7 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string
 // TODO
 Indexer::~Indexer() {
   delete tileids;
+  delete tileidset;
 }
 
 
@@ -92,40 +94,127 @@ vector<string> * Indexer::getAllAttrTilesByCoords(vector<int64_t> * coords) {
   return Indexer::getAllAttrTilesById(id);
 }
 
-/*
+
 vector<string> * Indexer::getTilesByDimSubRange(vector<int64_t> * subranges) {
   vector<int64_t>::iterator it = subranges->begin();
-  map<int, set<int>> wholeTilesMap;
-  map<int, set<int>> allTilesMap;
+  //map<int, vector<int>> wholeTilesMap;
+  map<int, vector<int>> allTilesMap;
 
   for (int i = 0; i < nDim; ++i) {
     int64_t startRange = *(it++);
     int64_t endRange = *(it++);
 
     int pbegin = (int) floor((double) startRange / this->stride);
-    int wbegin = (int) cell((double) startRange / this->stride);
+    int pend = (int) ceil((double) endRange / this->stride);
 
-    int wend = (int) floor((double) endRange / this->stride);
-    int pend = (int) cell((double) endRange / this->stride);
+    for (int j = pbegin; j < pend; ++j) {
+      allTilesMap[i].push_back(j);
+    }
 
-    for (int j = pbegin; j < pend;; ++j) {
-      if (j >= wbegin && j < wend) {
-        wholeTilesMap[i].insert(j);
-      }
-      allTilesMap[i].insert(j);
+  }
+
+  vector<string> * allTileIDs = Indexer::combination(&allTilesMap);
+  // take intersection with all tileids
+  vector<string> * output = new vector<string>();
+  for (vector<string>::iterator it = allTileIDs->begin(); it != allTileIDs->end(); ++it) {
+    if (tileidset->find(*it) != tileidset->end()) {
+      output->push_back(*it);
     }
   }
 
+  delete allTileIDs;
+  return output;
 }
-*/
-/*
-vector<string> * Indexer::combination(vector<int> * subarrayIds) {
 
-  vector<int>::iterator it = subarrayIds->begin();
-  
+vector<string> * Indexer::getWholeTilesByDimSubRange(vector<int64_t> * subranges) {
+  vector<int64_t>::iterator it = subranges->begin();
+  map<int, vector<int>> wholeTilesMap;
+
+  for (int i = 0; i < this->nDim; ++i) {
+    int64_t startRange = *(it++);
+    int64_t endRange = *(it++);
+    int wbegin = (int) ceil((double) startRange / this->stride);
+    int wend = (int) floor((double) endRange / this->stride);
+    for (int k = wbegin; k < wend; ++k) {
+      wholeTilesMap[i].push_back(k);
+
+    }
+  }
+
+  vector<string> * wholeTileIDs = Indexer::combination(&wholeTilesMap);
+  // take intersection with all tileids
   vector<string> * output = new vector<string>();
+  for (vector<string>::iterator it = wholeTileIDs->begin(); it != wholeTileIDs->end(); ++it) {
+    if (tileidset->find(*it) != tileidset->end()) {
+      output->push_back(*it);
+    }
+  }
+
+  delete wholeTileIDs;
+  return output;
+
 }
-*/
+
+vector<string> * Indexer::getPartialTilesByDimSubRange(vector<int64_t> * subranges) {
+  vector<string> * allTiles = Indexer::getTilesByDimSubRange(subranges);
+  vector<string> * wholeTiles = Indexer::getWholeTilesByDimSubRange(subranges);
+
+  set<string> setAll = set<string>(allTiles->begin(), allTiles->end());
+  set<string> setWhole = set<string>(wholeTiles->begin(), wholeTiles->end());
+
+  set<string> diffSet;
+  std::set_difference(setAll.begin(), setAll.end(), setWhole.begin(), setWhole.end(), std::inserter(diffSet, diffSet.end()));
+
+  vector<string> * output = new vector<string>();
+  for (set<string>::iterator it = diffSet.begin(); it != diffSet.end(); ++it) {
+    output->push_back(*it);
+  }
+
+  delete allTiles;
+  delete wholeTiles;
+  return output;
+}
+
+// Keys are ints from 0 to nDim - 1
+vector<string> * Indexer::combination(map<int, vector<int>> * tileIDMaps) {
+
+  vector<string> * output = new vector<string>();
+
+  //map<int, vector<int>>::iterator it = tileIDMaps->begin();
+  //int first = *it;
+  vector<int> firstVector = (*tileIDMaps)[0];
+
+  for (vector<int>::iterator it = firstVector.begin(); it != firstVector.end(); ++it) {
+    output->push_back(to_string(*it));
+  }
+
+  for (int i = 1; i < this->nDim; ++i) {
+
+    // copy output
+    vector<string> copy;
+    for (vector<string>::iterator it = output->begin(); it != output->end(); ++it) {
+
+      string idPrefix = *it;
+      for (vector<int>::iterator itd = (*tileIDMaps)[i].begin(); itd != (*tileIDMaps)[i].end(); ++itd) {
+        string newIdPrefix = idPrefix + "-" + to_string(*itd);
+        copy.push_back(newIdPrefix);
+      }
+
+    }
+    // clear output
+    output->clear();
+    // deallocates memory
+    output->shrink_to_fit();
+
+    // insert to output
+    for (vector<string>::iterator itc = copy.begin(); itc != copy.end(); ++itc) {
+      output->push_back(*itc);
+    }
+  }
+
+  return output;
+}
+
 // PRIVATE FUNCTIONS
 // Produce all combinations of [(0,...,x), (0,...,y), ...]
 vector<string> * Indexer::generateTileIds() {
@@ -174,6 +263,7 @@ vector<string> * Indexer::generateTileIds() {
   // Filter output to only files that exist
   for (vector<string>::iterator it = output.begin(); it != output.end(); ++it) {
     string filename = this->getCoordTileById(*it);
+    cout << "combination filename: " << filename << endl;
     if (Indexer::fileExists(filename)) {
       filteredOutput->push_back(*it);
     }

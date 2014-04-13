@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include <string>
-
+#include <set>
 using namespace std;
 // This class is responsible for finding tiles given the query
 // Assume fixed logical tiles
@@ -20,6 +20,7 @@ class Indexer {
 
     map<int, vector<string>> attrToTileMap;
     vector<string> *tileids;
+    set<string> *tileidset;
 
     // Constructor
     Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string indexfile);
@@ -54,7 +55,7 @@ class Indexer {
     vector<string> * getWholeTilesByDimSubRange(vector<int64_t> * subranges);
 
     // Returns all tile ids that partially overlap with subranges
-    vector<string> * getPartialTilesBySubRange(vector<int64_t> * subranges);
+    vector<string> * getPartialTilesByDimSubRange(vector<int64_t> * subranges);
 
   private:
     // Populates tileids
@@ -62,6 +63,8 @@ class Indexer {
 
     // Checks if filename exists
     bool fileExists(string filename);
+
+    vector<string> * combination(map<int, vector<int>> * tileIDMaps);
 };
 
 #endif

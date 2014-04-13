@@ -7,6 +7,13 @@
 #include "Subarray.h"
 
 using namespace std;
+
+void printVector(vector<string> * vec) {
+  for (vector<string>::iterator it = vec->begin(); it != vec->end(); ++it) {
+    cout << *it << endl;
+  }
+}
+
 // Main function
 int main(int argc, char *argv[]) {
 
@@ -52,6 +59,22 @@ int main(int argc, char *argv[]) {
   cout << "\n\nFILTER: " << endl;
   f1->filter();
 
+  vector<int64_t> subranges;
+  subranges.push_back(3);
+  subranges.push_back(7);
+  subranges.push_back(3);
+  subranges.push_back(7);
+
+  vector<string> *subtiles = indexer->getTilesByDimSubRange(&subranges);
+  vector<string> * wholeTiles = indexer->getWholeTilesByDimSubRange(&subranges);
+  vector<string> * partialTiles = indexer->getPartialTilesByDimSubRange(&subranges);
+
+  cout << "all sub tiles" << endl;
+  printVector(subtiles);
+  cout << "whole sub tiles" << endl;
+  printVector(wholeTiles);
+  cout << "partial sub tiles" << endl;
+  printVector(partialTiles);
 /*
   cout << "Subarray: " << endl;
   vector<int64_t> subranges;
@@ -61,7 +84,10 @@ int main(int argc, char *argv[]) {
   subranges.push_back(7);
   string subarrayName = "output-subarray0";
   Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
+
   s1->execute();
 */
   return 0;
 }
+
+

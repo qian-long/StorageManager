@@ -22,7 +22,9 @@ Subarray::~Subarray() {
 void Subarray::execute() {
 
   // TODO: add better error handling
+  // Create directory for new array
   if (mkdir(this->name.c_str(), S_IRWXU) != 0) {
+    perror ("Directory exists");
     return;
   }
 
