@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
   string subarrayName = "output-subarray0";
   Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
 
-  s1->execute2();
+  s1->execute();
 
   return 0;
 }

@@ -26,12 +26,8 @@ class Subarray {
     // Writes a new array in the corresponding subranges
     // TODO: retile?
     void execute();
-
-    void execute2();
   private:
     bool inRange(vector<int64_t> * coords);
-    vector<string>  getInRangeWholeTiles();
-    vector<string>  getInRangePartialTiles();
     void subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attrIndex);
 };
 
