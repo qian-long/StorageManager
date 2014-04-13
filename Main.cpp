@@ -36,9 +36,10 @@ int main(int argc, char *argv[]) {
 
 
 
-  Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride);
+  Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride, "myindex.txt");
   int attrIndex = 0;
   vector<string> *tiles = indexer->findTilesByAttribute(attrIndex);
+  cout << "After indexer construction" << endl;
   for (vector<string>::iterator itc = tiles->begin(); itc != tiles->end(); ++itc) {
       cout << *itc << endl;
   }

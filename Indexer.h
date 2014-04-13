@@ -16,12 +16,13 @@ class Indexer {
     int nAttr;
     vector<int64_t> ranges;
     int stride;
+    string indexfile;
 
     map<int, vector<string>> attrToTileMap;
     vector<string> *tileids;
 
     // Constructor
-    Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride);
+    Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string indexfile);
 
     // Destructor
     ~Indexer();

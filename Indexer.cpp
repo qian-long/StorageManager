@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <math.h>
 #include <map>
@@ -10,27 +11,30 @@
 using namespace std;
 
 // Constructor
-Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride) {
+Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string indexfile) {
   this->nDim = nDim;
   this->nAttr = nAttr;
   this->ranges = ranges;
   this->stride = stride;
+  this->indexfile = indexfile;
 
   // Initialize maps
   this->tileids = this->generateTileIds();
-  for (vector<string>::iterator it = tileids->begin(); it != tileids->end(); ++it) {
-    string suffix = *it;
-    for (int i = 0; i < nAttr; ++i) {
-      string filename = "tile-attrs[" + to_string(i) + "]-" + (*it) + ".dat";
 
-      // Checks that file exists
-      if( access( filename.c_str(), F_OK ) != -1 ) {
-        // file exists
+  // Open and read index file
+  ifstream indexIn(this->indexfile);
+  string line;
+  if (indexIn.is_open()) {
+    while (getline(indexIn, line)) {
+      for (int i = 0; i < nAttr; ++i) {
+        string filename = "tile-attrs[" + to_string(i) + "]-" + line + ".dat";
         attrToTileMap[i].push_back(filename);
       }
     }
   }
-
+  else {
+    perror("Unable to open index file");
+  }
 }
 
 // Destructor
