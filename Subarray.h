@@ -32,7 +32,7 @@ class Subarray {
     bool inRange(vector<int64_t> * coords);
     vector<string>  getInRangeWholeTiles();
     vector<string>  getInRangePartialTiles();
-    void subarrayAttr(vector<string> * partialTiles, int attrIndex);
+    void subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attrIndex);
 };
 
 #endif
