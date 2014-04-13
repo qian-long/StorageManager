@@ -42,6 +42,9 @@ class Indexer {
     // Returns all attribute tiles given tileid
     vector<string> * getAllAttrTilesById(string tileid);
     
+    // Returns all RLE attribute tiles given tileid
+    vector<string> * getAllRLEAttrTilesById(string tileid);
+
     // Returns tile id given coordinates
     string getTileIdByCoords(vector<int64_t> * coords);
 

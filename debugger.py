@@ -97,4 +97,4 @@ def main():
 if __name__ == "__main__":
   main()
   convert_dir('output-filter-GT-4')
-
+  convert_dir('output-subarray0')

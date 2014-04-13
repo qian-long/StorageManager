@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <set>
@@ -19,6 +20,128 @@ Subarray::~Subarray() {
 
 }
 
+void Subarray::execute2() {
+  // TODO: add better error handling
+  // Create directory for new array
+  if (mkdir(this->name.c_str(), S_IRWXU) != 0) {
+    perror ("Directory exists, query executed before");
+    return;
+  }
+
+
+  vector<string> * wholeTiles = indexer->getWholeTilesByDimSubRange(subranges);
+  vector<string> * partialTiles = indexer->getPartialTilesByDimSubRange(subranges);
+  // Copy whole tiles over because they are entirely within the subarray boundaries
+  for (vector<string>::iterator it = wholeTiles->begin(); it != wholeTiles->end(); ++it) {
+    string tileid = *it;
+
+    // Copy coordinate tile
+    string coordTile = indexer->getCoordTileById(tileid);
+    ifstream sourceTile(coordTile, ios::binary);
+    ofstream destTile(this->name + "/" + coordTile, ios::binary);
+    destTile << sourceTile.rdbuf();
+    sourceTile.close();
+    destTile.close();
+
+    vector<string> * rleTiles = indexer->getAllRLEAttrTilesById(tileid);
+    // Copy all the compressed attribute tiles
+    for (vector<string>::iterator ita = rleTiles->begin(); ita != rleTiles->end(); ++ita) {
+      string attrTile = *ita;
+      ifstream source(attrTile, ios::binary);
+      ofstream dest(this->name + "/" + attrTile, ios::binary);
+      dest << source.rdbuf();
+      source.close();
+      dest.close();
+    }
+
+    delete rleTiles;
+  }
+
+  // Iterate through partial files to find matching coordinates
+  // TODO: use circular buffer later?
+  // TODO adjust based on number of dimensions
+  uint64_t limit = 16;
+  char inCoordBuf[limit];
+  char inAttrBuf[limit];
+
+  for (vector<string>::iterator it = partialTiles->begin(); it != partialTiles->end(); ++it) {
+    vector<uint64_t> inRangeCellNums; // cells in coordinate tile that is in range
+    uint64_t cellNum = 0;
+    string coordTile = indexer->getCoordTileById(*it);
+    FILE * coordFilep;
+    coordFilep = fopen(coordTile.c_str(), "r");
+    if (!coordFilep) {
+      perror("Coord tile doesn't exist");
+    }
+    ofstream outCoordFile;
+    stringstream outCoordBuf;
+
+    string cfilename = this->name + "/" + coordTile;
+    uint64_t usedMem = 0;
+    while (uint64_t creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep)) {
+      cout << "creadsize: " << creadsize << endl;
+
+      // iterate through
+      for (uint64_t i = 0; i < creadsize; i = i + 8*indexer->nDim) {
+
+        // Build coordinates
+        vector<int64_t> coords;
+        for (int d = 0; d < indexer->nDim; ++d) {
+          int64_t offset = i + 8*d;
+          int64_t coord = *((int64_t *)(inCoordBuf + offset));
+          cout << " coord: " << coord;
+          coords.push_back(coord);
+        }
+
+        if (Subarray::inRange(&coords)) {
+          cout << " in range" << endl;
+          inRangeCellNums.push_back(cellNum);
+          outCoordBuf.write((char *)(inCoordBuf + i), 8 * indexer->nDim);
+          usedMem += 8 * indexer->nDim;
+        }
+        else {
+          cout << endl;
+        }
+
+        // increment "coordinate line"
+        inRangeCellNums.push_back(cellNum);
+        cellNum++;
+      }
+
+      // write to output subarray tile file
+      if (usedMem >= limit) {
+        cout << "flushing subarray coords to file" << endl;
+        if (!outCoordFile.is_open()) {
+          outCoordFile.open(cfilename, std::fstream::app);
+        }
+        outCoordFile << outCoordBuf.str();
+
+        // resets
+        outCoordBuf.str(std::string());
+        usedMem = 0;
+      }
+    }
+
+    // flush remaining contents of outCoordBuf
+    cout << "remaining flush" << endl;
+    outCoordFile << outCoordBuf.str();
+
+    // Subarray each attribute file for this coordinate tile
+
+  }
+
+  vector<uint64_t> lines;
+  delete wholeTiles;
+  delete partialTiles;
+}
+
+// cellNums: in range cell nums from the coordinate tile
+// match up with attributes in this attribute tile
+/*
+void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attrIndex) {
+  
+}
+*/
 void Subarray::execute() {
 
   // TODO: add better error handling
@@ -115,6 +238,9 @@ void Subarray::execute() {
 
 // Private Functions
 bool Subarray::inRange(vector<int64_t> * coords) {
+  if (coords->size() == 0) {
+    return false;
+  }
   vector<int64_t>::iterator itsub = this->subranges->begin();
 
   for (vector<int64_t>::iterator it = coords->begin(); it != coords->end(); ++it) {

@@ -27,10 +27,12 @@ class Subarray {
     // TODO: retile?
     void execute();
 
+    void execute2();
   private:
     bool inRange(vector<int64_t> * coords);
     vector<string>  getInRangeWholeTiles();
     vector<string>  getInRangePartialTiles();
+    void subarrayAttr(vector<string> * partialTiles, int attrIndex);
 };
 
 #endif

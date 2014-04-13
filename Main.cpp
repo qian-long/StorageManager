@@ -75,18 +75,13 @@ int main(int argc, char *argv[]) {
   printVector(wholeTiles);
   cout << "partial sub tiles" << endl;
   printVector(partialTiles);
-/*
+
   cout << "Subarray: " << endl;
-  vector<int64_t> subranges;
-  subranges.push_back(3);
-  subranges.push_back(7);
-  subranges.push_back(3);
-  subranges.push_back(7);
   string subarrayName = "output-subarray0";
   Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
 
-  s1->execute();
-*/
+  s1->execute2();
+
   return 0;
 }
 

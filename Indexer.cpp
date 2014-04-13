@@ -19,14 +19,14 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string
   this->indexfile = indexfile;
 
   // Initialize maps
-  this->tileids = this->generateTileIds();
-  this->tileidset = new set<string>(tileids->begin(), tileids->end());
+  this->tileids = new vector<string>();
 
   // Open and read index file
   ifstream indexIn(this->indexfile);
   string line;
   if (indexIn.is_open()) {
     while (getline(indexIn, line)) {
+      tileids->push_back(line);
       for (int i = 0; i < nAttr; ++i) {
         string filename = "tile-attrs[" + to_string(i) + "]-" + line + ".dat";
         attrToTileMap[i].push_back(filename);
@@ -36,6 +36,8 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, int stride, string
   else {
     perror("Unable to open index file");
   }
+
+  this->tileidset = new set<string>(tileids->begin(), tileids->end());
 }
 
 // Destructor
@@ -74,6 +76,15 @@ vector<string> * Indexer::getAllAttrTilesById(string tileid) {
   }
   return attrTiles;
 }
+
+vector<string> * Indexer::getAllRLEAttrTilesById(string tileid) {
+  vector<string> * attrTiles = new vector<string>();
+  for (int i = 0; i < this->nAttr; ++i) {
+    attrTiles->push_back(Indexer::getRLEAttrTileById(i, tileid));
+  }
+  return attrTiles;
+}
+
 
 // Returns tile id given coordinates
 string Indexer::getTileIdByCoords(vector<int64_t> * coords) {
