@@ -18,4 +18,4 @@ clean:
 	$(RM) -r $(EXECUTABLE) *.o *~ *.dat *.csv output* data/*.tmp* myindex.txt
 
 cleandata:
-	$(RM) *.dat* *.csv myindex.txt
+	$(RM) -r *.dat* *.csv myindex.txt output*
