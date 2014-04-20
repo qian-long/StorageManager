@@ -25,10 +25,10 @@ class Loader {
     int64_t nAttr;
     vector<int64_t> ranges;
     int stride; // fixed logical tile size, range of logical coord space in one dimension
-    uint64_t mem_limit; // number of bytes used in main memory
+    uint64_t memLimit; // number of bytes in fixed physical coord tile
     
     // Constructor
-    Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t mem_limit);    
+    Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t memLimit);    
     
     // Destructor
     ~Loader();
@@ -40,6 +40,9 @@ class Loader {
     // Divides sorted file into tiles and writes to disk
     void tile();
 
+    // Read input csv file, sort by row major
+    void loadp();
+    void tilep();
     // Helper function to write buffers to disk
     void writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid);
 
@@ -53,6 +56,7 @@ class Loader {
     uint64_t mortonEncode2D(uint64_t x, uint64_t y);
     uint64_t shiftCoord(int64_t coord, int64_t min);
     string getTileID(string line);
+    string getSortKey(string line);
 };
 
 #endif

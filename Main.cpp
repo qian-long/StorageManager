@@ -35,12 +35,14 @@ int main(int argc, char *argv[]) {
 
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, mem_limit);
   cout << "Hello, world" << endl;
-
+/*
   cout << "loader->load()" << endl;
   loader->load();
   cout << "loader->tile()" << endl;
   loader->tile();
-
+*/
+  cout << "loader->loadp()" << endl;
+  loader->loadp();
 
 
   Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride, "myindex.txt");

@@ -20,13 +20,13 @@
 using namespace std;
 
 // Constructor
-Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t mem_limit) {
+Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t memLimit) {
   this->filename = filename;
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
   this->stride = stride;
-  this->mem_limit = mem_limit;
+  this->memLimit = memLimit;
 }
 
 // Destructor
@@ -344,6 +344,33 @@ string Loader::getTileID(string line) {
   return output;
 }
 
+string Loader::getSortKey(string line) {
+  string output = string("");
+  vector<string> tmp;
+
+  size_t pos = 0;
+  // TODO: look into Boost library for more robust parsing
+  while ((pos = line.find_first_of(',')) != string::npos) {
+
+      string p = line.substr(0, pos);
+      tmp.push_back(p);
+      line = line.substr(pos + 1);
+  }
+  if (!line.empty()) {
+    tmp.push_back(line);
+  }
+
+  vector<string>::iterator it = tmp.begin();
+  for (int i = 0; i < nDim - 1; ++i) {
+    output += (*it) + "-";
+    ++it;
+  }
+
+  // last one
+  output += (*it);
+  return output;
+
+}
 // Write each id to a new line
 // TODO: make more compact later
 void Loader::createIndexFile(set<string> * tileIDs) {
@@ -360,7 +387,52 @@ bool sortByMorton(Cell *c1, Cell *c2) {
   return (c1->getMortonCode() < c2->getMortonCode());
 }
 
+// Loading for fixed physical coordinate tiles
+void Loader::loadp() {
+  ifstream infile(this->filename);
+  string line;
+  stringstream ss;
+  ofstream tmpfile;
+  string tmpname = this->filename + "-fp.tmp";
+  tmpfile.open(tmpname, std::fstream::app);
 
+  // Step 1: append sort key to the end of every line
+  if (infile.is_open()) {
+    while (getline(infile, line)) {
+      string sortkey = Loader::getSortKey(line);
+      ss << line << "," << sortkey << endl;
+      if (ss.str().size() >= LIMIT) {
+        tmpfile << ss.str();
+        // clears string stream buffer
+        ss.str(std::string());
+      }
+    }
+  }
+
+  // final dumping
+  tmpfile << ss.str();
+  ss.str(std::string());
+
+  infile.close();
+  tmpfile.close();
+
+  // Step 2: external sort
+  int sortCol = this->nDim + this->nAttr + 1;
+  string outfile = this->filename + ".sorted";
+  // TODO: this is incredibly unsecure...
+  string cmd = "sort -t, -k" + std::to_string(sortCol) + " " + tmpname + " -o " + outfile;
+  std::system(cmd.c_str());
+
+  // removes first temp file
+  if (remove(tmpname.c_str()) != 0 ) {
+    perror( "Error deleting file" );
+  }
+
+}
+
+void Loader::tilep() {
+  
+}
 // Private functions
 
 // TODO: fix for negative numbers, shift the ranges...

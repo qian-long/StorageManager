@@ -15,7 +15,7 @@ $(EXECUTABLE): $(OBJECTS)
 all: $(SOURCES) $(EXECUTABLE)
 
 clean:
-	$(RM) -r $(EXECUTABLE) *.o *~ *.dat *.csv output* data/*.tmp* myindex.txt
+	$(RM) -r $(EXECUTABLE) *.o *~ *.dat *.csv output* data/*.tmp* myindex.txt data/*.sorted*
 
 cleandata:
-	$(RM) -r *.dat* *.csv myindex.txt output*
+	$(RM) -r *.dat* *.csv myindex.txt output* data/*.tmp data/*.sorted
