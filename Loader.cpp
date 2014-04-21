@@ -555,6 +555,13 @@ void Loader::tilep() {
   indexfile.open("myindex-fp.txt");
   indexfile << indexBuf.str();
   indexfile.close();
+
+  // Compress each attribute tile
+  for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
+    string key = it->first;
+    cout << "Compressing tile: " << key << endl;
+    Loader::compressTile(key.c_str());
+  }
 }
 
 // Private functions
