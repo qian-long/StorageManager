@@ -440,14 +440,6 @@ void Loader::tilep() {
   uint64_t curTileSize = 0;
   uint64_t usedMem = 0; // for controlling when to write to disk
   bool newTile = true;
-  /*
-  vector<int64_t> curMinCoords;
-  vector<int64_t> curMaxCoords;
-  for (int i = 0; i < nDim; ++i) {
-    curMinCoords.push_back(900000);
-    curMaxCoords.push_back(-900000);
-  }
-  */ 
 
   // Hashmap of filename for attribute to its contents
   // One filename per attribute/tile combination
@@ -459,6 +451,11 @@ void Loader::tilep() {
 
   if (infile.is_open()) {
     while (getline(infile, line)) {
+      // clear coords and attributes vectors
+      // TODO: only coords needs to be in outer scope
+      coords.clear();
+      attributes.clear();
+
       vector<string> lineElements;
       size_t pos = 0;
       // TODO: look into Boost library for more robust parsing
@@ -472,8 +469,7 @@ void Loader::tilep() {
       }
 
       // iterate through split vector to separate into coordinates and attributes
-
-            vector<string>::iterator it = lineElements.begin();
+      vector<string>::iterator it = lineElements.begin();
 
       // Coordinates
       for (int i = 0; i < nDim; i++) {
@@ -520,10 +516,8 @@ void Loader::tilep() {
         indexBuf << tileIDCounter << endl; 
         // TODO: write to disk
         
-        cout << "BEFORE, coordBuf.str(): " << coordBuf.str() << endl;
         Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
         
-        cout << "AFTER, coordBuf.str(): " << coordBuf.str() << endl;
         // Increment tile id
         tileIDCounter++;
 
@@ -532,22 +526,17 @@ void Loader::tilep() {
         newTile = true;
 
       }
-      
-    // clear coords and attributes vectors
-    coords.clear();
-    attributes.clear();
     }
   }
 
+  // Write max coord of last tile to index buffer
+  for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
+    indexBuf << *itm << ",";
+  }
+  indexBuf << tileIDCounter << endl; 
 
-    // Write final tile to disk
+  // Write final tile to disk
   if (coordBuf.str().size() > 0) {
-    // Write max coord of last tile to index buffer
-    for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
-      indexBuf << *itm << ",";
-    }
-    indexBuf << tileIDCounter << endl; 
-
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
   } 
   // Write index to disk
@@ -565,23 +554,6 @@ void Loader::tilep() {
 }
 
 // Private functions
-// returns true of smaller <= larger
-// row major order
-bool Loader::compareCoords(vector<int64_t> * smaller, vector<int64_t> * larger, int nDim) {
-
-  vector<int64_t>::iterator its = smaller->begin();
-  vector<int64_t>::iterator itl = larger->begin();
-
-  for (int i = 0; i < nDim; ++i) {
-    if (*its > *itl) {
-      return false;  
-    }
-    its++;
-    itl++;    
-  }
-
-  return true;
-}
 // TODO: fix for negative numbers, shift the ranges...
 //       use shiftCoord helper
 // http://www-graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN

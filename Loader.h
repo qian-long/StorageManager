@@ -57,7 +57,6 @@ class Loader {
     uint64_t shiftCoord(int64_t coord, int64_t min);
     string getTileID(string line);
     string getSortKey(string line);
-    bool compareCoords(vector<int64_t> * smaller, vector<int64_t> * larger, int nDim);
 };
 
 #endif
