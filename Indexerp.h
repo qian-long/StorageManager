@@ -23,7 +23,7 @@ class Indexerp {
     map<BoundingBox *, string> * boxToTileID;
     map<string, BoundingBox *> * tileIDToBox;
     map<int, vector<string>> * attrToTileMap;
-    //vector<string> *tileids;
+    vector<string> *tileids;
     //set<string> *tileidset;
 
     // Constructor

@@ -6,6 +6,7 @@
 #include "Filter.h"
 #include "Subarray.h"
 #include "Indexerp.h"
+#include "Filterp.h"
 
 using namespace std;
 
@@ -19,6 +20,7 @@ void printVector(vector<string> * vec) {
 int main(int argc, char *argv[]) {
 
   // TODO: Read this from config file (probably postgres) later
+  /*
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 2;
@@ -34,21 +36,16 @@ int main(int argc, char *argv[]) {
   //string csvfile = "data/compress-tiny.csv";
   //string csvfile = "data/compress-tiny2.csv";
 
+  
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, tile_size);
   cout << "Hello, world" << endl;
-/*
+
   cout << "loader->load()" << endl;
   loader->load();
   cout << "loader->tile()" << endl;
   loader->tile();
-*/
-  cout << "loader->loadp()" << endl;
-  loader->loadp();
-  cout << "loader->tilep()" << endl;
-  loader->tilep();
 
-  Indexerp *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
-  /*
+
   Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride, "myindex.txt");
   int attrIndex = 0;
   vector<string> *tiles = indexer->findTilesByAttribute(attrIndex);
@@ -88,6 +85,39 @@ int main(int argc, char *argv[]) {
 
   s1->execute();
   */
+  int64_t nDim = 2;
+  int64_t nAttribute = 1;
+  int stride = 2;
+  uint64_t tile_size = 16*4;
+
+  vector<int64_t> ranges;
+  ranges.push_back(0);
+  ranges.push_back(10);
+  ranges.push_back(0);
+  ranges.push_back(10);
+  string csvfile = "data/bb1.csv";
+  //string csvfile = "data/compress-tiny1.csv";
+  //string csvfile = "data/compress-tiny.csv";
+  //string csvfile = "data/compress-tiny2.csv";
+
+
+  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, tile_size);
+  cout << "loader->loadp()" << endl;
+  loader->loadp();
+  cout << "loader->tilep()" << endl;
+  loader->tilep();
+
+  Indexerp *indexer = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
+  int attrIndex = 0;
+
+  Filterp::FilterType ftype = Filterp::FilterType::GT;
+  int64_t val = 4;
+  string filtername = "fp-output-filter-GT-4";
+  Filterp * fp1 = new Filterp(indexer, attrIndex, ftype, val, filtername);
+  cout << "\n\nFILTER: " << endl;
+  fp1->filter();
+
+
   return 0;
 }
 

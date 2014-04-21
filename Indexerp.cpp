@@ -14,6 +14,8 @@ Indexerp::Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string indexfile
   this->boxToTileID = new map<BoundingBox *, string>();
   this->tileIDToBox = new map<string, BoundingBox *>();
   this->attrToTileMap = new map<int, vector<string>>();
+  this->tileids = new vector<string>();
+
   // Basic version: indexerp contains a list of bounding boxes mapped to tileids and reverse mapping
   // TODO
   Indexerp::parseIndexFile();  
@@ -41,6 +43,7 @@ void Indexerp::parseIndexFile() {
       string tileid = box->tileid;
       (*boxToTileID)[box] = tileid;
       (*tileIDToBox)[tileid] = box;
+      tileids->push_back(tileid);
       for (int i = 0; i < nAttr; ++i) {
         string filename = "tile-attrs[" + to_string(i) + "]-" + tileid + "-fp.dat";
         (*attrToTileMap)[i].push_back(filename);
@@ -91,12 +94,7 @@ vector<string> * Indexerp::getAllRLEAttrTilesById(string tileid) {
 
 }
 
-/*
-// Returns tile id given coordinates
-string getTileIdByCoords(vector<int64_t> * coords);
 
-// Returns all attribute tiles given coordinates
-vector<string> * getAllAttrTilesByCoords(vector<int64_t> * coords);
 
 // Returns all tile ids tha fall in subranges
 vector<string> * getTilesByDimSubRange(vector<int64_t> * subranges);
@@ -106,5 +104,4 @@ vector<string> * getWholeTilesByDimSubRange(vector<int64_t> * subranges);
 
 // Returns all tile ids that partially overlap with subranges
 vector<string> * getPartialTilesByDimSubRange(vector<int64_t> * subranges);
-*/
 

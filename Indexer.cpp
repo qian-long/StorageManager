@@ -85,7 +85,7 @@ vector<string> * Indexer::getAllRLEAttrTilesById(string tileid) {
   return attrTiles;
 }
 
-
+/*
 // Returns tile id given coordinates
 string Indexer::getTileIdByCoords(vector<int64_t> * coords) {
   vector<int64_t>::iterator it = coords->begin();
@@ -104,7 +104,7 @@ vector<string> * Indexer::getAllAttrTilesByCoords(vector<int64_t> * coords) {
   string id = getTileIdByCoords(coords);
   return Indexer::getAllAttrTilesById(id);
 }
-
+*/
 
 vector<string> * Indexer::getTilesByDimSubRange(vector<int64_t> * subranges) {
   vector<int64_t>::iterator it = subranges->begin();
