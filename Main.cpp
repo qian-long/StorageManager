@@ -5,6 +5,7 @@
 #include "Indexer.h"
 #include "Filter.h"
 #include "Subarray.h"
+#include "Indexerp.h"
 
 using namespace std;
 
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
   cout << "loader->tilep()" << endl;
   loader->tilep();
 
+  Indexerp *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
   /*
   Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride, "myindex.txt");
   int attrIndex = 0;
