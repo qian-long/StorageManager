@@ -434,12 +434,10 @@ void Loader::loadp() {
 void Loader::tilep() {
   string sortedfname = this->filename + ".sorted";
   ifstream infile(sortedfname);
-  
   string line;
   int tileIDCounter = 0;
   uint64_t curTileSize = 0;
   uint64_t usedMem = 0; // for controlling when to write to disk
-  bool newTile = true;
 
   // Hashmap of filename for attribute to its contents
   // One filename per attribute/tile combination
@@ -448,6 +446,13 @@ void Loader::tilep() {
   stringstream indexBuf; // used for index
   vector<int64_t> coords;
   vector<int64_t> attributes;
+
+  vector<int64_t> minCoords;
+  vector<int64_t> maxCoords;
+  for (int i = 0; i < nDim; ++i) {
+    minCoords.push_back(90000);
+    maxCoords.push_back(-90000);
+  }
 
   if (infile.is_open()) {
     while (getline(infile, line)) {
@@ -498,47 +503,62 @@ void Loader::tilep() {
       curTileSize += 8 * nDim;
       usedMem += 8 * nDim;
 
-      if (newTile) {
-        // write min coords to index
-        for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
-          indexBuf << *itm << ",";
+      // get min and max coords
+      vector<int64_t>::iterator itmin = minCoords.begin();
+      vector<int64_t>::iterator itmax = maxCoords.begin();
+      vector<int64_t>::iterator itcd = coords.begin();
+      for (int i = 0; i < nDim; ++i) {
+        if (*(itcd + i) < *(itmin + i)) {
+          *(itmin + i) = *(itcd + i);
         }
-        newTile = false;
+        if (*(itcd + i) > *(itmax + i)) {
+          *(itmax + i) = *(itcd + i);
+        }
       }
+
       if (curTileSize >= tileMemLimit) {
 
         cout << "Reached tileMemLimit: " << curTileSize << endl;
-        // min is first line, max is last (current) line
-        // write to index buffer
-        for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
+
+        // Writing min and max bounding box to index
+        for (vector<int64_t>::iterator itm = minCoords.begin(); itm != minCoords.end(); ++itm) {
           indexBuf << *itm << ",";
         }
-        indexBuf << tileIDCounter << endl; 
-        // TODO: write to disk
-        
-        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
-        
+        for (vector<int64_t>::iterator itm = maxCoords.begin(); itm != maxCoords.end(); ++itm) {
+          indexBuf << *itm << ",";
+        }
+        indexBuf << tileIDCounter << endl;
+        // write to disk
+        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp");
         // Increment tile id
         tileIDCounter++;
 
         // reset variables
         curTileSize = 0;
-        newTile = true;
-
+        minCoords.clear();
+        maxCoords.clear();
+        for (int i = 0; i < nDim; ++i) {
+          minCoords.push_back(90000);
+          maxCoords.push_back(-90000);
+        }
       }
+
     }
   }
-
-  // Write max coord of last tile to index buffer
-  for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
-    indexBuf << *itm << ",";
-  }
-  indexBuf << tileIDCounter << endl; 
 
   // Write final tile to disk
   if (coordBuf.str().size() > 0) {
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
-  } 
+  // Write index line of last tile
+    for (vector<int64_t>::iterator itm = minCoords.begin(); itm != minCoords.end(); ++itm) {
+      indexBuf << *itm << ",";
+    }
+    for (vector<int64_t>::iterator itm = maxCoords.begin(); itm != maxCoords.end(); ++itm) {
+      indexBuf << *itm << ",";
+    }
+    indexBuf << tileIDCounter << endl;
+  }
+
   // Write index to disk
   ofstream indexfile;
   indexfile.open("myindex-fp.txt");

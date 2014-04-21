@@ -22,14 +22,14 @@ int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 2;
-  uint64_t tile_size = 40;
+  uint64_t tile_size = 16*4;
 
   vector<int64_t> ranges;
   ranges.push_back(0);
   ranges.push_back(10);
   ranges.push_back(0);
   ranges.push_back(10);
-  string csvfile = "data/tiny.csv";
+  string csvfile = "data/bb1.csv";
   //string csvfile = "data/compress-tiny1.csv";
   //string csvfile = "data/compress-tiny.csv";
   //string csvfile = "data/compress-tiny2.csv";

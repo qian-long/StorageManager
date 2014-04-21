@@ -31,7 +31,7 @@ class Indexerp {
 
     // Destructor
     ~Indexerp();
-    
+
     vector<string> * findTilesByAttribute(int attrIndex);
 
     // Returns attribute tile given attribute index and tileid
@@ -45,7 +45,7 @@ class Indexerp {
 
     // Returns all attribute tiles given tileid
     vector<string> * getAllAttrTilesById(string tileid);
-    
+
     // Returns all RLE attribute tiles given tileid
     vector<string> * getAllRLEAttrTilesById(string tileid);
 
