@@ -26,7 +26,7 @@ Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nA
   this->ranges = ranges;
   this->nAttr = nAttr;
   this->stride = stride;
-  this->memLimit = memLimit;
+  this->tileMemLimit = memLimit;
 }
 
 // Destructor
@@ -149,8 +149,6 @@ void Loader::tile() {
         cout << "NEW TILE, flushing to disk" << endl;
         cout << "currentTileID: " << currentTileID << endl;
         cout << "*it: " << *it << endl;
-        //Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, *it);
-
         Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
         // assign new tileid
         currentTileID = *it;
@@ -217,12 +215,15 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
     string key = it->first;
     ofstream attrfile;
     attrfile.open(key, std::fstream::app);
-    cout << "writing to key: " << key << endl;
-    attrfile << (*attrBufMap)[key];
+    // TODO:figure out erasing keys
+    if ((*attrBufMap)[key].size() > 0) {
+      cout << "writing to key: " << key << endl;
+      attrfile << (*attrBufMap)[key];
 
-    // reset attfBuf
-    (*attrBufMap)[key].clear();
-    attrfile.close();
+      // reset attfBuf
+      (*attrBufMap)[key].clear();
+      attrfile.close();
+    }
   }
 
   coordFile.close();
@@ -431,10 +432,149 @@ void Loader::loadp() {
 }
 
 void Loader::tilep() {
+  string sortedfname = this->filename + ".sorted";
+  ifstream infile(sortedfname);
   
-}
-// Private functions
+  string line;
+  int tileIDCounter = 0;
+  uint64_t curTileSize = 0;
+  uint64_t usedMem = 0; // for controlling when to write to disk
+  bool newTile = true;
+  /*
+  vector<int64_t> curMinCoords;
+  vector<int64_t> curMaxCoords;
+  for (int i = 0; i < nDim; ++i) {
+    curMinCoords.push_back(900000);
+    curMaxCoords.push_back(-900000);
+  }
+  */ 
 
+  // Hashmap of filename for attribute to its contents
+  // One filename per attribute/tile combination
+  map<string, string> attrBufMap;
+  stringstream coordBuf; // use same buffer for all lines
+  stringstream indexBuf; // used for index
+  vector<int64_t> coords;
+  vector<int64_t> attributes;
+
+  if (infile.is_open()) {
+    while (getline(infile, line)) {
+      vector<string> lineElements;
+      size_t pos = 0;
+      // TODO: look into Boost library for more robust parsing
+      while ((pos = line.find_first_of(',')) != string::npos) {
+        string p = line.substr(0, pos);
+        lineElements.push_back(p);
+        line = line.substr(pos + 1);
+      }
+      if (!line.empty()) {
+        lineElements.push_back(line);
+      }
+
+      // iterate through split vector to separate into coordinates and attributes
+
+            vector<string>::iterator it = lineElements.begin();
+
+      // Coordinates
+      for (int i = 0; i < nDim; i++) {
+        int64_t coord = (int64_t)strtoll((*it).c_str(), NULL, 10);
+        coords.push_back(coord);
+        ++it;
+      }
+
+      // Attributes
+      for (int i = 0; i < nAttr; i++) {
+        int64_t attr = (int64_t)strtoll((*it).c_str(), NULL, 10);
+        attributes.push_back(attr);
+
+        string attrfname = "tile-attrs[" + to_string(i) + "]-" + to_string(tileIDCounter) + "-fp.dat";
+        // Serializing data into 8 bytes
+        attrBufMap[attrfname].append((char *)(&attr), 8);
+        ++it;
+      }
+
+      // write to coordbuf
+      for (vector<int64_t>::iterator itc = coords.begin(); itc != coords.end(); ++itc) {
+        int64_t coord = *itc;
+        // Serializing data into 8 bytes
+        coordBuf.write((char *)(&coord), 8);
+      }
+      curTileSize += 8 * nDim;
+      usedMem += 8 * nDim;
+
+      if (newTile) {
+        // write min coords to index
+        for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
+          indexBuf << *itm << ",";
+        }
+        newTile = false;
+      }
+      if (curTileSize >= tileMemLimit) {
+
+        cout << "Reached tileMemLimit: " << curTileSize << endl;
+        // min is first line, max is last (current) line
+        // write to index buffer
+        for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
+          indexBuf << *itm << ",";
+        }
+        indexBuf << tileIDCounter << endl; 
+        // TODO: write to disk
+        
+        cout << "BEFORE, coordBuf.str(): " << coordBuf.str() << endl;
+        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
+        
+        cout << "AFTER, coordBuf.str(): " << coordBuf.str() << endl;
+        // Increment tile id
+        tileIDCounter++;
+
+        // reset variables
+        curTileSize = 0;
+        newTile = true;
+
+      }
+      
+    // clear coords and attributes vectors
+    coords.clear();
+    attributes.clear();
+    }
+  }
+
+
+    // Write final tile to disk
+  if (coordBuf.str().size() > 0) {
+    // Write max coord of last tile to index buffer
+    for (vector<int64_t>::iterator itm = coords.begin(); itm != coords.end(); ++itm) {
+      indexBuf << *itm << ",";
+    }
+    indexBuf << tileIDCounter << endl; 
+
+    Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
+  } 
+  // Write index to disk
+  ofstream indexfile;
+  indexfile.open("myindex-fp.txt");
+  indexfile << indexBuf.str();
+  indexfile.close();
+}
+
+// Private functions
+// returns true of smaller <= larger
+// row major order
+bool Loader::compareCoords(vector<int64_t> * smaller, vector<int64_t> * larger, int nDim) {
+
+  vector<int64_t>::iterator its = smaller->begin();
+  vector<int64_t>::iterator itl = larger->begin();
+
+  for (int i = 0; i < nDim; ++i) {
+    if (*its > *itl) {
+      return false;  
+    }
+    its++;
+    itl++;    
+  }
+
+  return true;
+}
 // TODO: fix for negative numbers, shift the ranges...
 //       use shiftCoord helper
 // http://www-graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN

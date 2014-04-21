@@ -25,7 +25,7 @@ class Loader {
     int64_t nAttr;
     vector<int64_t> ranges;
     int stride; // fixed logical tile size, range of logical coord space in one dimension
-    uint64_t memLimit; // number of bytes in fixed physical coord tile
+    uint64_t tileMemLimit; // number of bytes in fixed physical coord tile
     
     // Constructor
     Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t memLimit);    
@@ -57,6 +57,7 @@ class Loader {
     uint64_t shiftCoord(int64_t coord, int64_t min);
     string getTileID(string line);
     string getSortKey(string line);
+    bool compareCoords(vector<int64_t> * smaller, vector<int64_t> * larger, int nDim);
 };
 
 #endif

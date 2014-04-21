@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 2;
-  uint64_t mem_limit = 100; // number of bytes
+  uint64_t tile_size = 32;
 
   vector<int64_t> ranges;
   ranges.push_back(0);
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   //string csvfile = "data/compress-tiny.csv";
   //string csvfile = "data/compress-tiny2.csv";
 
-  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, mem_limit);
+  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, tile_size);
   cout << "Hello, world" << endl;
 /*
   cout << "loader->load()" << endl;
@@ -43,8 +43,10 @@ int main(int argc, char *argv[]) {
 */
   cout << "loader->loadp()" << endl;
   loader->loadp();
+  cout << "loader->tilep()" << endl;
+  loader->tilep();
 
-
+  /*
   Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride, "myindex.txt");
   int attrIndex = 0;
   vector<string> *tiles = indexer->findTilesByAttribute(attrIndex);
@@ -83,7 +85,7 @@ int main(int argc, char *argv[]) {
   Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
 
   s1->execute();
-
+  */
   return 0;
 }
 

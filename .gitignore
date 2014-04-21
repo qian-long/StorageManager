@@ -2,4 +2,5 @@
 *.swp
 *.o
 *.dat
+*.pyc
 loader
