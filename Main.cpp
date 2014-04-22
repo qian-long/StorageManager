@@ -7,7 +7,6 @@
 #include "Indexer.h"
 #include "IndexerL.h"
 #include "Indexerp.h"
-#include "Filterp.h"
 
 using namespace std;
 
@@ -112,14 +111,13 @@ int main(int argc, char *argv[]) {
   cout << "loader->tile()" << endl;
   loader->tile();
 
-  /*
   Indexerp *indexer = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
   int attrIndex = 0;
 
-  Filterp::FilterType ftype = Filterp::FilterType::GT;
+  Filter::FilterType ftype = Filter::FilterType::GT;
   int64_t val = 4;
   string filtername = "output-fp-filter-GT-4";
-  Filterp * fp1 = new Filterp(indexer, attrIndex, ftype, val, filtername);
+  Filter * fp1 = new Filter(indexer, attrIndex, ftype, val, filtername);
   cout << "\n\nFILTER: " << endl;
   fp1->filter();
 
@@ -140,8 +138,8 @@ int main(int argc, char *argv[]) {
   printVector(wholeTiles);
   cout << "partial sub tiles" << endl;
   printVector(partialTiles);
-  */
 
+  /*
   cout << "TESTING INDEXERS" << endl;
   Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
   Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "myindex.txt");
@@ -166,6 +164,7 @@ int main(int argc, char *argv[]) {
     cout << "rletile: " << rletile << endl;
     cout << "coordTile: " << coordTile << endl;
   }
+  */
 
   return 0;
 }
