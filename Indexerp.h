@@ -6,24 +6,25 @@
 #include <string>
 #include <set>
 #include "BoundingBox.h"
+#include "Indexer.h"
 
 using namespace std;
 class BoundingBox;
 // This class is responsible for finding tiles given the query
 // Assume fixed physical tiles
-class Indexerp {
+class Indexerp: public virtual Indexer {
 
   public:
     // Parameters
-    int nDim;
-    int nAttr;
-    vector<int64_t> ranges;
-    string indexfile;
+    //int nDim;
+    //int nAttr;
+    //vector<int64_t> ranges;
+    //string indexfile;
 
     map<BoundingBox *, string> * boxToTileID;
     map<string, BoundingBox *> * tileIDToBox;
-    map<int, vector<string>> * attrToTileMap;
-    vector<string> *tileids;
+    //map<int, vector<string>> * attrToTileMap;
+    //vector<string> *tileids;
     //set<string> *tileidset;
 
     // Constructor
@@ -32,10 +33,10 @@ class Indexerp {
     // Destructor
     ~Indexerp();
 
-    vector<string> * findTilesByAttribute(int attrIndex);
+    //vector<string> * findTilesByAttribute(int attrIndex);
 
     // Returns attribute tile given attribute index and tileid
-    string getAttrTileById(int attrIndex, string tileid);
+    //string getAttrTileById(int attrIndex, string tileid);
 
     // Returns RLE attribute tile given attribute index and tileid
     string getRLEAttrTileById(int attrIndex, string tileid);

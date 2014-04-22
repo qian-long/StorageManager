@@ -6,20 +6,26 @@
 using namespace std;
 
 // Constructor
-Indexerp::Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string indexfile) {
+Indexerp::Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string indexfile): Indexer(nDim, ranges, nAttr, indexfile) {
+  /*
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
   this->indexfile = indexfile;
-  
+  */ 
   this->boxToTileID = new map<BoundingBox *, string>();
   this->tileIDToBox = new map<string, BoundingBox *>();
-  this->attrToTileMap = new map<int, vector<string>>();
-  this->tileids = new vector<string>();
+  this->suffix = "-fp";
+  //this->attrToTileMap = new map<int, vector<string>>();
+  //this->tileids = new vector<string>();
 
   // Basic version: indexerp contains a list of bounding boxes mapped to tileids and reverse mapping
   // TODO
+  //
+  cout << "IN Indexerp constructor" << endl;
+  cout << "tileids->size(): " << tileids->size() << endl;
   Indexerp::parseIndexFile();  
+
 
 }
 
@@ -35,22 +41,33 @@ Indexerp::~Indexerp() {
 // Modifies boxToTileID, tileIDToBox
 // Uses indexfile, nDim
 void Indexerp::parseIndexFile() {
-  ifstream infile(this->indexfile);
+  cout << "Indexerp::parseIndexFile()" << endl;
+  cout << "Indexerp tileids.size(): " << tileids->size() << endl;
+  ifstream infile("myindex-fp.txt");
   string line;
   if (infile.is_open()) {
     while (getline(infile, line)) {
-      BoundingBox * box = new BoundingBox(line, nDim);
+      
+      cout << "line: " << line << endl;
+      BoundingBox * box = new BoundingBox(string(line), nDim);
+     
       cout << "box->tileid: " << box->tileid << endl;
       string tileid = box->tileid;
-      (*boxToTileID)[box] = tileid;
-      (*tileIDToBox)[tileid] = box;
-      tileids->push_back(tileid);
+      //(*boxToTileID)[box] = tileid;
+      //(*tileIDToBox)[tileid] = box;
+      cout << "this->tileids->size(): " << this->tileids->size() << endl;
+      this->tileids->push_back(tileid);
       for (int i = 0; i < nAttr; ++i) {
         string filename = "tile-attrs[" + to_string(i) + "]-" + tileid + "-fp.dat";
         (*attrToTileMap)[i].push_back(filename);
 
       }
+      
     }
+    
+  }
+  else {
+    perror("index file won't open");
   }
 }
 
@@ -60,11 +77,12 @@ vector<string> * Indexerp::findTilesByAttribute(int attrIndex) {
 }
 */
 // Returns attribute tile given attribute index and tileid
+/*
 string Indexerp::getAttrTileById(int attrIndex, string tileid) {
   string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + "-fp.dat";
   return filename;
 }
-
+*/
 // Returns RLE attribute tile given attribute index and tileid
 string Indexerp::getRLEAttrTileById(int attrIndex, string tileid) {
 
@@ -81,7 +99,7 @@ string Indexerp::getCoordTileById(string tileid) {
 vector<string> * Indexerp::getAllAttrTilesById(string tileid) {
   vector<string> * attrTiles = new vector<string>();
   for (int i = 0; i < this->nAttr; ++i) {
-    attrTiles->push_back(Indexerp::getAttrTileById(i, tileid));
+    attrTiles->push_back(Indexer::getAttrTileById(i, tileid));
   }
   return attrTiles;
 }

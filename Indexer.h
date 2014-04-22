@@ -16,6 +16,7 @@ class Indexer {
     string indexfile;
     vector<string> * tileids;
     map<int, vector<string>> * attrToTileMap;
+    string suffix = "";
 
     // Constructor
     Indexer(int nDim, vector<int64_t> ranges, int nAttr, string indexfile);

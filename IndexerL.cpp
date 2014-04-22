@@ -24,6 +24,8 @@ IndexerL::IndexerL(int nDim, vector<int64_t> ranges, int nAttr, int stride, stri
   */
   
 
+  cout << "In IndexerL constructor" << endl;
+  cout << "tileids->size(): " << tileids->size() << endl;
   // Open and read index file
   ifstream indexIn(this->indexfile);
   string line;
@@ -51,16 +53,18 @@ IndexerL::~IndexerL() {
 }
 
 
+/*
 vector<string> * IndexerL::findTilesByAttribute(int attrIndex) {
   return &((*attrToTileMap)[attrIndex]);
 }
-
+*/
+/*
 string IndexerL::getAttrTileById(int attrIndex, string tileid) {
 
   string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + ".dat";
   return filename;
 }
-
+*/
 string IndexerL::getRLEAttrTileById(int attrIndex, string tileid) {
   return "rle-tile-attrs[" + to_string(attrIndex) + "]-" + tileid + ".dat";
 }
@@ -75,7 +79,7 @@ string IndexerL::getCoordTileById(string tileid) {
 vector<string> * IndexerL::getAllAttrTilesById(string tileid) {
   vector<string> * attrTiles = new vector<string>();
   for (int i = 0; i < this->nAttr; ++i) {
-    attrTiles->push_back(IndexerL::getAttrTileById(i, tileid));
+    attrTiles->push_back(Indexer::getAttrTileById(i, tileid));
   }
   return attrTiles;
 }

@@ -2,9 +2,10 @@
 #include <iostream>
 #include <map>
 #include "Loader.h"
-#include "Indexer.h"
 #include "Filter.h"
 #include "Subarray.h"
+#include "Indexer.h"
+#include "IndexerL.h"
 #include "Indexerp.h"
 #include "Filterp.h"
 
@@ -106,7 +107,12 @@ int main(int argc, char *argv[]) {
   loader->loadp();
   cout << "loader->tilep()" << endl;
   loader->tilep();
+  cout << "loader->load()" << endl;
+  loader->load();
+  cout << "loader->tile()" << endl;
+  loader->tile();
 
+  /*
   Indexerp *indexer = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
   int attrIndex = 0;
 
@@ -134,8 +140,23 @@ int main(int argc, char *argv[]) {
   printVector(wholeTiles);
   cout << "partial sub tiles" << endl;
   printVector(partialTiles);
+  */
 
+  cout << "TESTING INDEXERS" << endl;
+  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "myindex.txt");
+  Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
+  cout << "indexerl->indexfile: " << indexerl->indexfile << endl;
+  cout << "indexerp->indexfile: " << indexerp->indexfile << endl;
+  cout << endl << "FIXED PHYSICAL TILE IDS" << endl;
+  for (vector<string>::iterator itp = indexerp->tileids->begin(); itp != indexerp->tileids->end(); ++itp) {
+    cout << "tileid: " << *itp << endl; 
+  }
+  cout << "FIXED LOGICAL TILE IDS" << endl;
+  for (vector<string>::iterator it = indexerl->tileids->begin(); it != indexerl->tileids->end(); ++it) {
+    cout << "tileid: " << *it << endl; 
+  }
 
+  
   return 0;
 }
 

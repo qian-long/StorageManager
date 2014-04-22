@@ -1,7 +1,10 @@
 #include <map>
+#include <iostream>
 #include "Indexer.h"
 
+using namespace std;
 Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, string indexfile) {
+  cout << "In Indexer Constructor" << endl;
   this->nDim = nDim;
   this->nAttr = nAttr;
   this->ranges = ranges;
@@ -10,6 +13,7 @@ Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, string indexfile) 
   // Initialize maps
   this->tileids = new vector<string>();
   this->attrToTileMap = new map<int, vector<string>>();
+  cout << "this->tileids->size(): " << this->tileids->size() << endl;
 }
 
 // Destructor
@@ -24,7 +28,9 @@ vector<string> * Indexer::findTilesByAttribute(int attrIndex) {
 
 // Returns attribute tile given attribute index and tileid
 string Indexer::getAttrTileById(int attrIndex, string tileid) {
-  return NULL;
+  string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + suffix + ".dat";
+  return filename;
+
 };
 
 // Returns RLE attribute tile given attribute index and tileid

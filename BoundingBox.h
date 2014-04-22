@@ -11,7 +11,7 @@ class BoundingBox {
     vector<int64_t> * minCoords;
     vector<int64_t> * maxCoords;
     int nDim;
-    string tileid;
+    string tileid = "";
 
     // Constructor
     BoundingBox(string line, int nDim);

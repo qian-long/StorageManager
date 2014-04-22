@@ -9,7 +9,7 @@
 using namespace std;
 // This class is responsible for finding tiles given the query
 // Assume fixed logical tiles
-class IndexerL: public Indexer {
+class IndexerL: public virtual Indexer {
 
   public:
     // Parameters
@@ -29,10 +29,10 @@ class IndexerL: public Indexer {
     // Destructor
     ~IndexerL();
     
-    vector<string> * findTilesByAttribute(int attrIndex);
+    //vector<string> * findTilesByAttribute(int attrIndex);
 
     // Returns attribute tile given attribute index and tileid
-    string getAttrTileById(int attrIndex, string tileid);
+    //string getAttrTileById(int attrIndex, string tileid);
 
     // Returns RLE attribute tile given attribute index and tileid
     string getRLEAttrTileById(int attrIndex, string tileid);
