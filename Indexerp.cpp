@@ -54,10 +54,11 @@ void Indexerp::parseIndexFile() {
   }
 }
 
+/*
 vector<string> * Indexerp::findTilesByAttribute(int attrIndex) {
   return &(*attrToTileMap)[attrIndex];
 }
-
+*/
 // Returns attribute tile given attribute index and tileid
 string Indexerp::getAttrTileById(int attrIndex, string tileid) {
   string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + "-fp.dat";
