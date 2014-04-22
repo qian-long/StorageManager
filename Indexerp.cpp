@@ -1,6 +1,7 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include "Indexerp.h"
 using namespace std;
 
@@ -97,11 +98,100 @@ vector<string> * Indexerp::getAllRLEAttrTilesById(string tileid) {
 
 
 // Returns all tile ids tha fall in subranges
-vector<string> * getTilesByDimSubRange(vector<int64_t> * subranges);
+// subranges = [minX, maxX, minY, maxY, ...]
+vector<string> * Indexerp::getTilesByDimSubRange(vector<int64_t> * subranges) {
+
+  vector<string> * output = new vector<string>();
+
+  // iterate through tile ids and see if subrange intersects the bounding boxes
+  for (vector<string>::iterator it = tileids->begin(); it != tileids->end(); ++it) {
+    bool overlapsTile = true;
+    string tileid = *it;
+    BoundingBox * box = (*tileIDToBox)[tileid];
+    vector<int64_t>::iterator itMin = box->minCoords->begin();
+    vector<int64_t>::iterator itMax = box->maxCoords->begin();
+
+    // compare subranges
+    for (vector<int64_t>::iterator its = subranges->begin(); its != subranges->end(); its = its + 2) {
+      int64_t lowCoord = *(its);
+      int64_t hiCoord = *(its + 1);
+      int64_t minCoord = *itMin;
+      int64_t maxCoord = *itMax;
+
+      if (lowCoord > maxCoord || hiCoord < minCoord) {
+        overlapsTile = false;
+        break;
+      }
+      ++itMin;
+      ++itMax;
+    }
+
+    if (overlapsTile) {
+      output->push_back(tileid);
+    }
+  }
+
+  return output;
+}
 
 // Returns all whole tiles ids that fall completely within subranges
-vector<string> * getWholeTilesByDimSubRange(vector<int64_t> * subranges);
+vector<string> * Indexerp::getWholeTilesByDimSubRange(vector<int64_t> * subranges) {
+  vector<string> * wholeTiles = new vector<string>();
+
+  // iterate through tile ids and see if subrange intersects the bounding boxes
+  for (vector<string>::iterator it = tileids->begin(); it != tileids->end(); ++it) {
+    string tileid = *it;
+    BoundingBox * box = (*tileIDToBox)[tileid];
+    cout << "tileid: " << tileid << endl;
+    vector<int64_t>::iterator itMin = box->minCoords->begin();
+    vector<int64_t>::iterator itMax = box->maxCoords->begin();
+    bool wholeTile = true;
+
+    // compare subranges
+    for (vector<int64_t>::iterator its = subranges->begin(); its != subranges->end(); its = its + 2) {
+      int64_t lowCoord = *(its);
+      int64_t hiCoord = *(its + 1);
+      int64_t minCoord = *itMin;
+      int64_t maxCoord = *itMax;
+
+      cout << "minCoord: " << minCoord << " maxCoord: " << maxCoord;
+      cout << " lowCoord: " << lowCoord << " hiCoord: " << hiCoord << endl;
+      if (!(minCoord >= lowCoord && maxCoord<= hiCoord)) {
+        cout << " false" << endl << endl;
+        wholeTile = false;
+      }
+      ++itMin;
+      ++itMax;
+    }
+
+    if (wholeTile) {
+      wholeTiles->push_back(tileid);
+    }
+  }
+
+  return wholeTiles;
+
+}
 
 // Returns all tile ids that partially overlap with subranges
-vector<string> * getPartialTilesByDimSubRange(vector<int64_t> * subranges);
+vector<string> * Indexerp::getPartialTilesByDimSubRange(vector<int64_t> * subranges) {
+  vector<string> * allTiles = Indexerp::getTilesByDimSubRange(subranges);
+  vector<string> * wholeTiles = Indexerp::getWholeTilesByDimSubRange(subranges);
+
+  set<string> setAll = set<string>(allTiles->begin(), allTiles->end());
+  set<string> setWhole = set<string>(wholeTiles->begin(), wholeTiles->end());
+
+  set<string> diffSet;
+  std::set_difference(setAll.begin(), setAll.end(), setWhole.begin(), setWhole.end(), std::inserter(diffSet, diffSet.end()));
+
+  vector<string> * output = new vector<string>();
+  for (set<string>::iterator it = diffSet.begin(); it != diffSet.end(); ++it) {
+    output->push_back(*it);
+  }
+
+  delete allTiles;
+  delete wholeTiles;
+  return output;
+
+}
 

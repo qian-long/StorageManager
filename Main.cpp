@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
   ranges.push_back(10);
   ranges.push_back(0);
   ranges.push_back(10);
-  string csvfile = "data/bb1.csv";
+  string csvfile = "data/bb2.csv";
   //string csvfile = "data/compress-tiny1.csv";
   //string csvfile = "data/compress-tiny.csv";
   //string csvfile = "data/compress-tiny2.csv";
@@ -112,10 +112,28 @@ int main(int argc, char *argv[]) {
 
   Filterp::FilterType ftype = Filterp::FilterType::GT;
   int64_t val = 4;
-  string filtername = "fp-output-filter-GT-4";
+  string filtername = "output-fp-filter-GT-4";
   Filterp * fp1 = new Filterp(indexer, attrIndex, ftype, val, filtername);
   cout << "\n\nFILTER: " << endl;
   fp1->filter();
+
+  vector<int64_t> subranges;
+  subranges.push_back(4);
+  subranges.push_back(6);
+  subranges.push_back(3);
+  subranges.push_back(6);
+
+  cout << "all sub tiles [4,6] [3,6]" << endl;
+  vector<string> * subtiles = indexer->getTilesByDimSubRange(&subranges);
+  vector<string> * wholeTiles = indexer->getWholeTilesByDimSubRange(&subranges);
+  vector<string> * partialTiles = indexer->getPartialTilesByDimSubRange(&subranges);
+
+  cout << "all sub tiles" << endl;
+  printVector(subtiles);
+  cout << "whole sub tiles" << endl;
+  printVector(wholeTiles);
+  cout << "partial sub tiles" << endl;
+  printVector(partialTiles);
 
 
   return 0;
