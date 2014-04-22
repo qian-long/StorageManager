@@ -187,14 +187,12 @@ void Loader::tile() {
 
     // Final flush
     cout << "FINAL FLUSH" << endl;
-    cout << "currentTileID: " << currentTileID << endl;
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
   }
 
   // Create compressed binary attributes tiles
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
     string key = it->first;
-    cout << "Compressing tile: " << key << endl;
     Loader::compressTile(key.c_str());
   }
 }
@@ -261,9 +259,6 @@ void Loader::compressTile(const char * filename) {
     readNum = *((int64_t *)(buffer));
     if (!veryfirst) {
       if (currentNum != readNum) {
-
-        //cout << "writing occurrence: " << occurrence << endl;
-        //cout << "writing currentNum: " << currentNum << endl;
         outBuf.write((char *)(&occurrence), 8);
         outBuf.write((char *)(&currentNum), 8);
         currentNum = readNum;
@@ -282,8 +277,6 @@ void Loader::compressTile(const char * filename) {
       readNum = *((int64_t *)(buffer + i));
 
       if (currentNum != readNum) {
-        //cout << "writing occurrence: " << occurrence << endl;
-        //cout << "writing currentNum: " << currentNum << endl;
         outBuf.write((char *)(&occurrence), 8);
         outBuf.write((char *)(&currentNum), 8);
         currentNum = readNum;
@@ -303,8 +296,6 @@ void Loader::compressTile(const char * filename) {
   // compare last int64
   if (currentNum == readNum) {
     // write to out buffer
-    //cout << "writing occurrence: " << occurrence << endl;
-    //cout << "writing currentNum: " << currentNum << endl;
     outBuf.write((char *)(&occurrence), 8);
     outBuf.write((char *)(&currentNum), 8);
   }

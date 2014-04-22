@@ -139,6 +139,12 @@ int main(int argc, char *argv[]) {
   cout << "partial sub tiles" << endl;
   printVector(partialTiles);
 
+  cout << "Subarray: " << endl;
+  string subarrayName = "output-fp-subarray0";
+  Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
+
+  s1->execute();
+
   /*
   cout << "TESTING INDEXERS" << endl;
   Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
