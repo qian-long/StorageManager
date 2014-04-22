@@ -6,13 +6,11 @@
 
 using namespace::std;
 BoundingBox::BoundingBox(string line, int nDim) {
-  //std::cout << "constructing boundingbox" << std::endl;
   this->nDim = nDim;
   this->minCoords = new vector<int64_t>();
   this->maxCoords = new vector<int64_t>();
   // Parse line
   vector<string> lineElements;
-  
   size_t pos = 0;
   // TODO: look into Boost library for more robust parsing
   while ((pos = line.find_first_of(',')) != string::npos) {
@@ -36,8 +34,6 @@ BoundingBox::BoundingBox(string line, int nDim) {
     ++it;
   }
   this->tileid = string(*it);
-  
-  //std::cout << "done constructing BoundingBox" << std::endl;
 }
 
 BoundingBox::~BoundingBox() {

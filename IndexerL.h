@@ -12,15 +12,8 @@ using namespace std;
 class IndexerL: public virtual Indexer {
 
   public:
-    // Parameters
-    //int nDim;
-    //int nAttr;
-    //vector<int64_t> ranges;
     int stride;
-    //string indexfile;
 
-    //map<int, vector<string>> attrToTileMap;
-    //vector<string> *tileids;
     set<string> *tileidset;
 
     // Constructor
@@ -29,29 +22,6 @@ class IndexerL: public virtual Indexer {
     // Destructor
     ~IndexerL();
     
-    //vector<string> * findTilesByAttribute(int attrIndex);
-
-    // Returns attribute tile given attribute index and tileid
-    //string getAttrTileById(int attrIndex, string tileid);
-
-    // Returns RLE attribute tile given attribute index and tileid
-    string getRLEAttrTileById(int attrIndex, string tileid);
-
-    // Returns coordinate tile given tile id
-    string getCoordTileById(string tileid);
-
-    // Returns all attribute tiles given tileid
-    vector<string> * getAllAttrTilesById(string tileid);
-    
-    // Returns all RLE attribute tiles given tileid
-    vector<string> * getAllRLEAttrTilesById(string tileid);
-
-    // Returns tile id given coordinates
-    string getTileIdByCoords(vector<int64_t> * coords);
-
-    // Returns all attribute tiles given coordinates
-    vector<string> * getAllAttrTilesByCoords(vector<int64_t> * coords);
-
     // Returns all tile ids tha fall in subranges
     vector<string> * getTilesByDimSubRange(vector<int64_t> * subranges);
 

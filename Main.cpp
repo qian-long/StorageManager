@@ -143,20 +143,30 @@ int main(int argc, char *argv[]) {
   */
 
   cout << "TESTING INDEXERS" << endl;
-  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "myindex.txt");
   Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
-  cout << "indexerl->indexfile: " << indexerl->indexfile << endl;
-  cout << "indexerp->indexfile: " << indexerp->indexfile << endl;
+  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "myindex.txt");
+
   cout << endl << "FIXED PHYSICAL TILE IDS" << endl;
   for (vector<string>::iterator itp = indexerp->tileids->begin(); itp != indexerp->tileids->end(); ++itp) {
-    cout << "tileid: " << *itp << endl; 
-  }
-  cout << "FIXED LOGICAL TILE IDS" << endl;
-  for (vector<string>::iterator it = indexerl->tileids->begin(); it != indexerl->tileids->end(); ++it) {
-    cout << "tileid: " << *it << endl; 
+
+    string attrTile = indexerp->getAttrTileById(0, *itp);
+    string rletile = indexerp->getRLEAttrTileById(0, *itp);
+    string coordTile = indexerp->getCoordTileById(*itp);
+    cout << "attrTile: " << attrTile << endl;
+    cout << "rletile: " << rletile << endl;
+    cout << "coordTile: " << coordTile << endl;
   }
 
-  
+  cout << "FIXED LOGICAL TILE IDS" << endl;
+  for (vector<string>::iterator it = indexerl->tileids->begin(); it != indexerl->tileids->end(); ++it) {
+    string attrTile = indexerl->getAttrTileById(0, *it);
+    string rletile = indexerl->getRLEAttrTileById(0, *it);
+    string coordTile = indexerl->getCoordTileById(*it);
+    cout << "attrTile: " << attrTile << endl;
+    cout << "rletile: " << rletile << endl;
+    cout << "coordTile: " << coordTile << endl;
+  }
+
   return 0;
 }
 

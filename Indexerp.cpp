@@ -7,26 +7,14 @@ using namespace std;
 
 // Constructor
 Indexerp::Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string indexfile): Indexer(nDim, ranges, nAttr, indexfile) {
-  /*
-  this->nDim = nDim;
-  this->ranges = ranges;
-  this->nAttr = nAttr;
-  this->indexfile = indexfile;
-  */ 
+
   this->boxToTileID = new map<BoundingBox *, string>();
   this->tileIDToBox = new map<string, BoundingBox *>();
   this->suffix = "-fp";
-  //this->attrToTileMap = new map<int, vector<string>>();
-  //this->tileids = new vector<string>();
 
   // Basic version: indexerp contains a list of bounding boxes mapped to tileids and reverse mapping
   // TODO
-  //
-  cout << "IN Indexerp constructor" << endl;
-  cout << "tileids->size(): " << tileids->size() << endl;
   Indexerp::parseIndexFile();  
-
-
 }
 
 // Destructor
@@ -41,21 +29,16 @@ Indexerp::~Indexerp() {
 // Modifies boxToTileID, tileIDToBox
 // Uses indexfile, nDim
 void Indexerp::parseIndexFile() {
-  cout << "Indexerp::parseIndexFile()" << endl;
-  cout << "Indexerp tileids.size(): " << tileids->size() << endl;
   ifstream infile("myindex-fp.txt");
   string line;
   if (infile.is_open()) {
     while (getline(infile, line)) {
       
-      cout << "line: " << line << endl;
       BoundingBox * box = new BoundingBox(string(line), nDim);
      
-      cout << "box->tileid: " << box->tileid << endl;
       string tileid = box->tileid;
-      //(*boxToTileID)[box] = tileid;
-      //(*tileIDToBox)[tileid] = box;
-      cout << "this->tileids->size(): " << this->tileids->size() << endl;
+      (*boxToTileID)[box] = tileid;
+      (*tileIDToBox)[tileid] = box;
       this->tileids->push_back(tileid);
       for (int i = 0; i < nAttr; ++i) {
         string filename = "tile-attrs[" + to_string(i) + "]-" + tileid + "-fp.dat";
@@ -70,50 +53,6 @@ void Indexerp::parseIndexFile() {
     perror("index file won't open");
   }
 }
-
-/*
-vector<string> * Indexerp::findTilesByAttribute(int attrIndex) {
-  return &(*attrToTileMap)[attrIndex];
-}
-*/
-// Returns attribute tile given attribute index and tileid
-/*
-string Indexerp::getAttrTileById(int attrIndex, string tileid) {
-  string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + "-fp.dat";
-  return filename;
-}
-*/
-// Returns RLE attribute tile given attribute index and tileid
-string Indexerp::getRLEAttrTileById(int attrIndex, string tileid) {
-
-  return "rle-tile-attrs[" + to_string(attrIndex) + "]-" + tileid + "-fp.dat";
-}
-
-// Returns coordinate tile given tile id
-string Indexerp::getCoordTileById(string tileid) {
-  string filename = "tile-coords-" + tileid + "-fp.dat";
-  return filename;
-}
-
-// Returns all attribute tiles given tileid
-vector<string> * Indexerp::getAllAttrTilesById(string tileid) {
-  vector<string> * attrTiles = new vector<string>();
-  for (int i = 0; i < this->nAttr; ++i) {
-    attrTiles->push_back(Indexer::getAttrTileById(i, tileid));
-  }
-  return attrTiles;
-}
-
-// Returns all RLE attribute tiles given tileid
-vector<string> * Indexerp::getAllRLEAttrTilesById(string tileid) {
-  vector<string> * attrTiles = new vector<string>();
-  for (int i = 0; i < this->nAttr; ++i) {
-    attrTiles->push_back(Indexerp::getRLEAttrTileById(i, tileid));
-  }
-  return attrTiles;
-
-}
-
 
 
 // Returns all tile ids tha fall in subranges

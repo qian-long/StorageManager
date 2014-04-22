@@ -12,20 +12,7 @@ using namespace std;
 
 // Constructor
 IndexerL::IndexerL(int nDim, vector<int64_t> ranges, int nAttr, int stride, string indexfile): Indexer(nDim, ranges, nAttr, indexfile) {
-  /*
-  this->nDim = nDim;
-  this->nAttr = nAttr;
-  this->ranges = ranges;
-  this->stride = stride;
-  this->indexfile = indexfile;
 
-  // Initialize maps
-  this->tileids = new vector<string>();
-  */
-  
-
-  cout << "In IndexerL constructor" << endl;
-  cout << "tileids->size(): " << tileids->size() << endl;
   // Open and read index file
   ifstream indexIn(this->indexfile);
   string line;
@@ -51,67 +38,6 @@ IndexerL::~IndexerL() {
   delete tileids;
   delete tileidset;
 }
-
-
-/*
-vector<string> * IndexerL::findTilesByAttribute(int attrIndex) {
-  return &((*attrToTileMap)[attrIndex]);
-}
-*/
-/*
-string IndexerL::getAttrTileById(int attrIndex, string tileid) {
-
-  string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + ".dat";
-  return filename;
-}
-*/
-string IndexerL::getRLEAttrTileById(int attrIndex, string tileid) {
-  return "rle-tile-attrs[" + to_string(attrIndex) + "]-" + tileid + ".dat";
-}
-
-string IndexerL::getCoordTileById(string tileid) {
-
-  string filename = "tile-coords-" + tileid + ".dat";
-  return filename;
-
-}
-
-vector<string> * IndexerL::getAllAttrTilesById(string tileid) {
-  vector<string> * attrTiles = new vector<string>();
-  for (int i = 0; i < this->nAttr; ++i) {
-    attrTiles->push_back(Indexer::getAttrTileById(i, tileid));
-  }
-  return attrTiles;
-}
-
-vector<string> * IndexerL::getAllRLEAttrTilesById(string tileid) {
-  vector<string> * attrTiles = new vector<string>();
-  for (int i = 0; i < this->nAttr; ++i) {
-    attrTiles->push_back(IndexerL::getRLEAttrTileById(i, tileid));
-  }
-  return attrTiles;
-}
-
-/*
-// Returns tile id given coordinates
-string Indexer::getTileIdByCoords(vector<int64_t> * coords) {
-  vector<int64_t>::iterator it = coords->begin();
-  string id = to_string(*it/this->stride);
-  it++;
-
-  for (; it != coords->end(); ++it) {
-    id = id + "-" + to_string(*it/this->stride);
-  }
-
-  return id;
-}
-
-// Returns all attribute tiles given coordinates
-vector<string> * Indexer::getAllAttrTilesByCoords(vector<int64_t> * coords) {
-  string id = getTileIdByCoords(coords);
-  return Indexer::getAllAttrTilesById(id);
-}
-*/
 
 vector<string> * IndexerL::getTilesByDimSubRange(vector<int64_t> * subranges) {
   vector<int64_t>::iterator it = subranges->begin();

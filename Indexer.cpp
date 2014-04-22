@@ -4,16 +4,15 @@
 
 using namespace std;
 Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, string indexfile) {
-  cout << "In Indexer Constructor" << endl;
   this->nDim = nDim;
   this->nAttr = nAttr;
   this->ranges = ranges;
   this->indexfile = indexfile;
+  this->suffix = "";
 
   // Initialize maps
   this->tileids = new vector<string>();
   this->attrToTileMap = new map<int, vector<string>>();
-  cout << "this->tileids->size(): " << this->tileids->size() << endl;
 }
 
 // Destructor
@@ -28,42 +27,52 @@ vector<string> * Indexer::findTilesByAttribute(int attrIndex) {
 
 // Returns attribute tile given attribute index and tileid
 string Indexer::getAttrTileById(int attrIndex, string tileid) {
-  string filename = "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + suffix + ".dat";
-  return filename;
-
+  return "tile-attrs[" + to_string(attrIndex) + "]-" + tileid + suffix + ".dat";
 };
 
 // Returns RLE attribute tile given attribute index and tileid
 string Indexer::getRLEAttrTileById(int attrIndex, string tileid) {
-  return NULL;
+  return "rle-tile-attrs[" + to_string(attrIndex) + "]-" + tileid + suffix + ".dat";
 };
 
 // Returns coordinate tile given tile id
 string Indexer::getCoordTileById(string tileid) {
-  return NULL;
+  return "tile-coords-" + tileid + suffix + ".dat";
 }
 
 // Returns all attribute tiles given tileid
 vector<string> * Indexer::getAllAttrTilesById(string tileid) {
-  return NULL;
+  vector<string> * attrTiles = new vector<string>();
+  for (int i = 0; i < this->nAttr; ++i) {
+    attrTiles->push_back(Indexer::getAttrTileById(i, tileid));
+  }
+  return attrTiles;
+
 };
 
 // Returns all RLE attribute tiles given tileid
 vector<string> * Indexer::getAllRLEAttrTilesById(string tileid) {
-  return NULL;
+  vector<string> * attrTiles = new vector<string>();
+  for (int i = 0; i < this->nAttr; ++i) {
+    attrTiles->push_back(Indexer::getRLEAttrTileById(i, tileid));
+  }
+  return attrTiles;
 };
 
 // Returns all tile ids tha fall in subranges
+// Implemented by Subclasses
 vector<string> * Indexer::getTilesByDimSubRange(vector<int64_t> * subranges) {
   return NULL;
 };
 
 // Returns all whole tiles ids that fall completely within subranges
+// Implemented by subclasses
 vector<string> * Indexer::getWholeTilesByDimSubRange(vector<int64_t> * subranges) {
   return NULL;
 }
 
 // Returns all tile ids that partially overlap with subranges
+// Implemented by subclasses
 vector<string> * Indexer::getPartialTilesByDimSubRange(vector<int64_t> * subranges) {
   return NULL;
 };
