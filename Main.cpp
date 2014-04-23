@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <map>
+#include <climits>
 #include "Loader.h"
 #include "Filter.h"
 #include "Subarray.h"
@@ -172,6 +173,7 @@ int main(int argc, char *argv[]) {
   }
   */
 
+  cout << "LLONG_MAX: " << LLONG_MAX << endl;
   return 0;
 }
 

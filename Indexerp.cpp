@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include "Debug.h"
 #include "Indexerp.h"
 using namespace std;
 
@@ -33,21 +34,18 @@ void Indexerp::parseIndexFile() {
   string line;
   if (infile.is_open()) {
     while (getline(infile, line)) {
-      
       BoundingBox * box = new BoundingBox(string(line), nDim);
-     
       string tileid = box->tileid;
       (*boxToTileID)[box] = tileid;
       (*tileIDToBox)[tileid] = box;
       this->tileids->push_back(tileid);
       for (int i = 0; i < nAttr; ++i) {
-        string filename = "tile-attrs[" + to_string(i) + "]-" + tileid + "-fp.dat";
+        //string filename = "tile-attrs[" + to_string(i) + "]-" + tileid + "-fp.dat";
+        string filename = Indexer::getAttrTileById(i, tileid);
         (*attrToTileMap)[i].push_back(filename);
 
       }
-      
     }
-    
   }
   else {
     perror("index file won't open");
@@ -100,7 +98,7 @@ vector<string> * Indexerp::getWholeTilesByDimSubRange(vector<int64_t> * subrange
   for (vector<string>::iterator it = tileids->begin(); it != tileids->end(); ++it) {
     string tileid = *it;
     BoundingBox * box = (*tileIDToBox)[tileid];
-    cout << "tileid: " << tileid << endl;
+    dbgmsg("tileid: " + tileid);
     vector<int64_t>::iterator itMin = box->minCoords->begin();
     vector<int64_t>::iterator itMax = box->maxCoords->begin();
     bool wholeTile = true;
@@ -112,10 +110,10 @@ vector<string> * Indexerp::getWholeTilesByDimSubRange(vector<int64_t> * subrange
       int64_t minCoord = *itMin;
       int64_t maxCoord = *itMax;
 
-      cout << "minCoord: " << minCoord << " maxCoord: " << maxCoord;
-      cout << " lowCoord: " << lowCoord << " hiCoord: " << hiCoord << endl;
+      dbgmsg("minCoord: " + to_string(minCoord) + " maxCoord: " + to_string(maxCoord) + " lowCoord: " + to_string(lowCoord) + "hiCoord: " + to_string(hiCoord));
+
       if (!(minCoord >= lowCoord && maxCoord<= hiCoord)) {
-        cout << " false" << endl << endl;
+        dbgmsg("false");
         wholeTile = false;
       }
       ++itMin;

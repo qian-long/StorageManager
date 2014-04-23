@@ -10,6 +10,8 @@
 #include <bitset>
 #include <algorithm>
 #include <map>
+#include <climits>
+#include "Debug.h"
 #include "Loader.h"
 
 //#define TILENAME_TEMPLATE tile-%s-.dat
@@ -55,16 +57,16 @@ void Loader::load() {
       tileIDset.insert(tileid);
       ss << line << "," << tileid << endl;
       if (ss.str().size() >= LIMIT) {
-        cout << "dumping" << endl;
-        cout << ss.str();
+        dbgmsg("dumping");
+        dbgmsg(ss.str());
         outfile << ss.str();
         // clears string stream buffer
         ss.str(std::string());
       }
     }
   }
-  cout << "final dumping" << endl;
-  cout << ss.str();
+  dbgmsg("final dumping")
+  dbgmsg(ss.str())
   outfile << ss.str();
   // clears string stream buffer
   ss.str(std::string());
@@ -77,7 +79,7 @@ void Loader::load() {
   string tmpfile2 = this->filename + ".sorted";
   // TODO: this is incredibly unsecure...
   string cmd = "sort -t, -k" + std::to_string(tileIDCol) + " " + tmpfile + " -o " + tmpfile2;
-  cout << "cmd: " << cmd;
+  dbgmsg("cmd: " + cmd);
   std::system(cmd.c_str());
 
   // removes first temp file
@@ -146,9 +148,9 @@ void Loader::tile() {
       // write to disk when tileid changes
       if (currentTileID.compare(*it) != 0) {
         // new tile
-        cout << "NEW TILE, flushing to disk" << endl;
-        cout << "currentTileID: " << currentTileID << endl;
-        cout << "*it: " << *it << endl;
+        dbgmsg("NEW TILE, flushing to disk");
+        dbgmsg("currentTileID: " + currentTileID);
+        dbgmsg("*it: " + *it);
         Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
         // assign new tileid
         currentTileID = *it;
@@ -157,7 +159,7 @@ void Loader::tile() {
         currentTileID = *it;
         if (usedMem > LIMIT) {
           // flush to file if buffers are full
-          cout << "memory reached, flushing to disk" << endl;
+          dbgmsg("memory reached, flushing to disk");
           // flush buffers to disk
           Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
           usedMem = 0;
@@ -186,7 +188,7 @@ void Loader::tile() {
     }
 
     // Final flush
-    cout << "FINAL FLUSH" << endl;
+    dbgmsg("FINAL FLUSH");
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
   }
 
@@ -198,11 +200,11 @@ void Loader::tile() {
 }
 
 void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid) {
-  cout << "writing Tile bufs to disk" << endl;
+  dbgmsg("writing Tile bufs to disk");
   string fileCoords = "tile-coords-" + tileid + ".dat";
   ofstream coordFile;
   coordFile.open(fileCoords, std::fstream::app);
-  cout << "writing to fileCoords: " << fileCoords << endl;
+  dbgmsg("writing to fileCoords: " + fileCoords);
   coordFile << coordBuf->str();
 
   // reset coordBuf
@@ -215,7 +217,7 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
     attrfile.open(key, std::fstream::app);
     // TODO:figure out erasing keys
     if ((*attrBufMap)[key].size() > 0) {
-      cout << "writing to key: " << key << endl;
+      dbgmsg("writing to key: " + key);
       attrfile << (*attrBufMap)[key];
 
       // reset attfBuf
@@ -441,8 +443,8 @@ void Loader::tilep() {
   vector<int64_t> minCoords;
   vector<int64_t> maxCoords;
   for (int i = 0; i < nDim; ++i) {
-    minCoords.push_back(90000);
-    maxCoords.push_back(-90000);
+    minCoords.push_back(LLONG_MAX);
+    maxCoords.push_back(LLONG_MIN);
   }
 
   if (infile.is_open()) {
@@ -509,7 +511,7 @@ void Loader::tilep() {
 
       if (curTileSize >= tileMemLimit) {
 
-        cout << "Reached tileMemLimit: " << curTileSize << endl;
+        dbgmsg("Reached tileMemLimit: " + to_string(curTileSize));
 
         // Writing min and max bounding box to index
         for (vector<int64_t>::iterator itm = minCoords.begin(); itm != minCoords.end(); ++itm) {
@@ -559,7 +561,7 @@ void Loader::tilep() {
   // Compress each attribute tile
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
     string key = it->first;
-    cout << "Compressing tile: " << key << endl;
+    dbgmsg("Compressing tile: " + key);
     Loader::compressTile(key.c_str());
   }
 }

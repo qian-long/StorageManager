@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "Debug.h"
 #include "Filter.h"
 
 // TODO take in as parameter from somewhere
@@ -76,7 +77,6 @@ void Filter::filterTile(string tileid) {
     outAttrFile.open(afilename, std::fstream::app);
   }
 
-  uint64_t creadsize = 0;
   uint64_t areadsize = fread((char *)inAttrBuf,1, limit, attrFilep);
   uint64_t coordIndex = 0;
   uint64_t usedMem = 0;
@@ -86,16 +86,12 @@ void Filter::filterTile(string tileid) {
     uint64_t coordCount = 0;
     for (uint64_t i = 0; i < areadsize; i = i + 16) {
       uint64_t occurrence = *((uint64_t *)(inAttrBuf + i));
-      int64_t attribute = *((int64_t *)(inAttrBuf + i + 8));
-      cout << "occurrence: " << occurrence << endl;
-      cout << "attribute: " << attribute << endl;
-
+      dbgmsg("occurrence: " + to_string(occurrence));
       coordCount += occurrence;
     }
     // read coordCount * nDim * 8 bytes from coordFile
-    cout << "num bytes to read from coordFilep: " << coordCount * indexer->nDim * 8 << endl;
-    creadsize = fread((char *)inCoordBuf, 1, coordCount * indexer->nDim * 8, coordFilep);
-    cout << "creadsize: " << creadsize << endl;
+    dbgmsg("num bytes to read from coordFilep: " + to_string(coordCount * indexer->nDim * 8));
+    fread((char *)inCoordBuf, 1, coordCount * indexer->nDim * 8, coordFilep);
 
     // reset coordIndex
     coordIndex = 0;
@@ -120,9 +116,9 @@ void Filter::filterTile(string tileid) {
 
     // TODO check memory limit
     // write to file
-    if (usedMem > LIMIT) { 
-      cout << endl;
-      cout << "memory reached, writing to file" << endl;
+    if (usedMem > LIMIT) {
+      dbgmsg("\n");
+      dbgmsg("memory reached, writing to file");
       outCoordFile << outCoordBuf.str();
       outAttrFile << outAttrBuf.str();
 
@@ -134,7 +130,7 @@ void Filter::filterTile(string tileid) {
   }
 
   // Final flush
-  cout << "final flush" << endl;
+  dbgmsg("final flush");
   outCoordFile << outCoordBuf.str();
   outAttrFile << outAttrBuf.str();
 

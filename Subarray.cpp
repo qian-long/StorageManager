@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <set>
+#include "Debug.h"
 #include "Subarray.h"
 
 using namespace std;
@@ -66,8 +67,9 @@ void Subarray::execute() {
     vector<uint64_t> inRangeCellNums; // cells in coordinate tile that is in range
     string tileid = *it;
 
-    cout << endl << "Processing partial id: " << tileid << endl;
-    cout << "inRangeCellNums.size(): " << inRangeCellNums.size() << endl;
+    dbgmsg("");
+    dbgmsg("Processing partial id: " + tileid);
+    dbgmsg("inRangeCellNums.size(): " + to_string(inRangeCellNums.size()));
     // Start counting at 1
     uint64_t cellNum = 1;
     string coordTile = indexer->getCoordTileById(tileid);
@@ -82,8 +84,7 @@ void Subarray::execute() {
     string cfilename = this->name + "/" + coordTile;
     uint64_t usedMem = 0;
     while (uint64_t creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep)) {
-      cout << "creadsize: " << creadsize << endl;
-
+      dbgmsg("creadsize: " + to_string(creadsize));
       // iterate through
       for (uint64_t i = 0; i < creadsize; i = i + 8*indexer->nDim) {
 
@@ -92,28 +93,27 @@ void Subarray::execute() {
         for (int d = 0; d < indexer->nDim; ++d) {
           int64_t offset = i + 8*d;
           int64_t coord = *((int64_t *)(inCoordBuf + offset));
-          cout << " coord: " << coord;
+          dbgmsg("coord: " + to_string(coord));
           coords.push_back(coord);
         }
 
         if (Subarray::inRange(&coords)) {
-          cout << " in range cellNum: " << cellNum << endl;
+          dbgmsg(" in range cellNum: " + to_string(cellNum));
           inRangeCellNums.push_back(cellNum);
           outCoordBuf.write((char *)(inCoordBuf + i), 8 * indexer->nDim);
           usedMem += 8 * indexer->nDim;
         }
         else {
-          cout << endl;
+          dbgmsg("\n");
         }
 
         // increment "coordinate line"
-        //inRangeCellNums.push_back(cellNum);
         cellNum++;
       }
 
       // write to output subarray tile file
       if (usedMem >= limit) {
-        cout << "flushing subarray coords to file" << endl;
+        dbgmsg("flushing subarray coords to file");
         if (!outCoordFile.is_open()) {
           outCoordFile.open(cfilename, std::fstream::app);
         }
@@ -126,12 +126,10 @@ void Subarray::execute() {
     }
 
     // flush remaining contents of outCoordBuf
-    cout << "remaining flush" << endl;
+    dbgmsg("remaining flush");
     outCoordFile << outCoordBuf.str();
 
     // Subarray each attribute file for this coordinate tile
-    // TODO loop through nAttr
-    cout << "ASDFASDFSAFSAFDS tileid: " << tileid << endl;
     if (outCoordFile.is_open()) {
       for (int aindex = 0; aindex < indexer->nAttr; ++aindex) {
         Subarray::subarrayAttr(tileid, &inRangeCellNums, aindex);
@@ -149,11 +147,10 @@ void Subarray::execute() {
 // match up with attributes in this attribute tile
 
 void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attrIndex) {
-  cout << "SubArraying attribute cellNums: " << endl;
+  dbgmsg("SubArraying attribute cellNums: ");
   for (vector<uint64_t>::iterator it = cellNums->begin(); it != cellNums->end(); ++it) {
-    cout << *it << " ";
+    dbgmsg(*it);
   }
-  cout << endl;
   set<uint64_t> cellNumSet = set<uint64_t>(cellNums->begin(), cellNums->end());
 
   FILE * attrFilep;
@@ -179,16 +176,16 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
     for (uint64_t i = 0; i < areadsize; i = i + 16) {
       uint64_t occurrence = *((uint64_t *)(inAttrBuf + i));
       int64_t attribute = *((int64_t *)(inAttrBuf + i + 8));
-      cout << " occurrence: " << occurrence;
-      cout << " attribute: " << attribute;
+      dbgmsg(" occurrence: " + to_string(occurrence));
+      dbgmsg("attribute: " + to_string(attribute));
       uint64_t new_occurrence = 0;
       for (uint64_t occur = 0; occur < occurrence; ++occur) {
         if (cellNumSet.find(cellCount + occur) != cellNumSet.end()) {
-          cout << " found cellCount + occur: " << cellCount + occur << endl;
+          dbgmsg(" found cellCount + occur: " + to_string(cellCount + occur));
           new_occurrence++;
         }
         else {
-          cout << " not in cellnums" << endl;
+          dbgmsg(" not in cellnums");
         }
       }
 
@@ -206,7 +203,7 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
     }
 
     if (usedMem > limit) {
-      cout << "flushing to subarray attribute file" << endl;
+      dbgmsg("flushing to subarray attribute file");
       outAttrFile << outAttrBuf.str();
       // resetting
       outAttrBuf.str(std::string());
@@ -215,7 +212,7 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
   }
 
   // write what's remaining in buffer
-  cout << "final flushing subarray attribute file" << endl;
+  dbgmsg("final flushing subarray attribute file");
   outAttrFile << outAttrBuf.str();
   outAttrFile.close();
   fclose(attrFilep);

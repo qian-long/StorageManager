@@ -6,6 +6,7 @@
 #include <vector>
 #include <unistd.h>
 #include <algorithm>
+#include "Debug.h"
 #include "IndexerL.h"
 
 using namespace std;
@@ -207,7 +208,7 @@ vector<string> * IndexerL::generateTileIds() {
   // Filter output to only files that exist
   for (vector<string>::iterator it = output.begin(); it != output.end(); ++it) {
     string filename = this->getCoordTileById(*it);
-    cout << "combination filename: " << filename << endl;
+    dbgmsg("combination filename: " + filename);
     if (IndexerL::fileExists(filename)) {
       filteredOutput->push_back(*it);
     }
