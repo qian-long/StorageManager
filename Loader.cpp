@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <map>
 #include <climits>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "Debug.h"
 #include "Loader.h"
 
@@ -22,13 +24,15 @@
 using namespace std;
 
 // Constructor
-Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr, int stride, uint64_t memLimit) {
+Loader::Loader(string filename, int64_t nDim, vector<int64_t> ranges, int64_t nAttr) {
   this->filename = filename;
   this->nDim = nDim;
   this->ranges = ranges;
   this->nAttr = nAttr;
-  this->stride = stride;
-  this->tileMemLimit = memLimit;
+  this->arrayname = removeExtension(getFileName(filename));
+
+  //this->stride = stride;
+  //this->tileMemLimit = memLimit;
 }
 
 // Destructor
@@ -37,14 +41,25 @@ Loader::~Loader() {
 
 }
 
-void Loader::load() {
+void Loader::loadl(int stride) {
+  string outdir = "output-fl-" + arrayname;
 
+  dbgmsg("Creating output dir: " + outdir);
+  // Create output directory
+  // TODO: add better error handling
+  if (mkdir(outdir.c_str(), S_IRWXU) != 0) {
+    perror("Error creating loaderl output directory");
+    return;
+  }
+
+
+  string outpath = getFilePath(outdir, arrayname);
   ifstream infile(this->filename);
   string line;
   std::stringstream ss;
   ofstream outfile;
-  string tmpfile = this->filename + ".tmp";
-  outfile.open(tmpfile, std::fstream::app);
+  string tmpname = outpath + ".tmp";
+  outfile.open(tmpname, std::fstream::app);
 
   // Used for creating index file of non-empty tile IDs
   set<string> tileIDset;
@@ -53,7 +68,7 @@ void Loader::load() {
   // Step 1: append tileid to the end of every line
   if (infile.is_open()) {
     while (getline(infile, line)) {
-      string tileid = Loader::getTileID(line);
+      string tileid = Loader::getTileID(line, stride);
       tileIDset.insert(tileid);
       ss << line << "," << tileid << endl;
       if (ss.str().size() >= LIMIT) {
@@ -76,23 +91,25 @@ void Loader::load() {
 
   // Step 2, external sort
   int tileIDCol = this->nDim + this->nAttr + 1;
-  string tmpfile2 = this->filename + ".sorted";
+  string sortedfile = outpath + ".sorted";
   // TODO: this is incredibly unsecure...
-  string cmd = "sort -t, -k" + std::to_string(tileIDCol) + " " + tmpfile + " -o " + tmpfile2;
+  string cmd = "sort -t, -k" + std::to_string(tileIDCol) + " " + tmpname + " -o " + sortedfile;
   dbgmsg("cmd: " + cmd);
   std::system(cmd.c_str());
 
   // removes first temp file
-  if (remove(tmpfile.c_str()) != 0 ) {
-    perror( "Error deleting file" );
+  if (remove(tmpname.c_str()) != 0 ) {
+    perror( "Error deleting tmp file");
   }
 
   // Create index file for the indexer
-  Loader::createIndexFile(&tileIDset);
+  Loader::createIndexFile(outdir, &tileIDset);
+
+  // Step 3. Divide sorted file into fixed logical tiles
+  Loader::tilel(outdir, sortedfile, stride);
 }
 
-void Loader::tile() {
-  string sortedfile = this->filename + ".sorted";
+void Loader::tilel(string outdir, string sortedfile, int stride) {
   ifstream infile(sortedfile);
 
   string line;
@@ -151,7 +168,7 @@ void Loader::tile() {
         dbgmsg("NEW TILE, flushing to disk");
         dbgmsg("currentTileID: " + currentTileID);
         dbgmsg("*it: " + *it);
-        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID, outdir);
         // assign new tileid
         currentTileID = *it;
       }
@@ -161,7 +178,7 @@ void Loader::tile() {
           // flush to file if buffers are full
           dbgmsg("memory reached, flushing to disk");
           // flush buffers to disk
-          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+          Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID, outdir);
           usedMem = 0;
         }
       }
@@ -177,7 +194,7 @@ void Loader::tile() {
       int attrCounter = 0;
       for (vector<int64_t>::iterator ita = attributes.begin(); ita != attributes.end(); ++ita) {
 
-        string attrfilename = "tile-attrs[" + to_string(attrCounter) + "]-" + (*it) + ".dat";
+        string attrfilename = getFilePath(outdir, "tile-attrs[" + to_string(attrCounter) + "]-" + (*it) + ".dat");
         int64_t attr = *ita;
         // Serializing data into 8 bytes
         attrBufMap[attrfilename].append((char *)(&attr), 8);
@@ -189,7 +206,7 @@ void Loader::tile() {
 
     // Final flush
     dbgmsg("FINAL FLUSH");
-    Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID);
+    Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID, outdir);
   }
 
   // Create compressed binary attributes tiles
@@ -199,9 +216,9 @@ void Loader::tile() {
   }
 }
 
-void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid) {
+void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid, string outdir) {
   dbgmsg("writing Tile bufs to disk");
-  string fileCoords = "tile-coords-" + tileid + ".dat";
+  string fileCoords = getFilePath(outdir, "tile-coords-" + tileid + ".dat");
   ofstream coordFile;
   coordFile.open(fileCoords, std::fstream::app);
   dbgmsg("writing to fileCoords: " + fileCoords);
@@ -233,9 +250,11 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
 // attributes take up 8 bytes
 // output format: 8 bytes for occurrence, 8 bytes for value
 // Run Length Encoding Implementation
-void Loader::compressTile(const char * filename) {
+void Loader::compressTile(const string& attrfilename) {
+  dbgmsg("Compressing tile: " + attrfilename);
+  string outdir = getDirPath(attrfilename);
   FILE * filep;
-  filep = fopen(filename, "r");
+  filep = fopen(attrfilename.c_str(), "r");
   if (filep == NULL) {
     perror("file doesn't exist");
   }
@@ -252,7 +271,9 @@ void Loader::compressTile(const char * filename) {
   int64_t readNum = 0;
 
   ofstream outFile;
-  outFile.open("rle-" + string(filename), std::fstream::app);
+  string outname = getFilePath(getDirPath(attrfilename), "rle-" + getFileName(attrfilename));
+  dbgmsg("outname: " + outname);
+  outFile.open(outname, std::fstream::app);
   while (uint64_t readsize = fread((char *)buffer, 1, limit, filep)) {
     // process the block
     // Little endian
@@ -310,7 +331,7 @@ void Loader::compressTile(const char * filename) {
 }
 
 
-string Loader::getTileID(string line) {
+string Loader::getTileID(string line, int stride) {
   string output = string("");
   vector<string> tmp;
 
@@ -367,10 +388,11 @@ string Loader::getSortKey(string line) {
 }
 // Write each id to a new line
 // TODO: make more compact later
-void Loader::createIndexFile(set<string> * tileIDs) {
+void Loader::createIndexFile(string dirpath, set<string> * tileIDs) {
   ofstream out;
   // TODO: change name later
-  out.open("myindex.txt");
+  string outfile = getFilePath(dirpath, "index.txt");
+  out.open(outfile);
   for (set<string>::iterator it = tileIDs->begin(); it != tileIDs->end(); ++it) {
     out << *it << endl;
   }
@@ -382,12 +404,23 @@ bool sortByMorton(Cell *c1, Cell *c2) {
 }
 
 // Loading for fixed physical coordinate tiles
-void Loader::loadp() {
+void Loader::loadp(uint64_t tileMemLimit) {
+  string outdir = "output-FP-" + arrayname;
+  dbgmsg("Creating output dir: " + outdir);
+
+  // Create output directory
+  // TODO: add better error handling
+  if (mkdir(outdir.c_str(), S_IRWXU) != 0) {
+    perror("Error creating loadp output directory");
+    return;
+  }
+
   ifstream infile(this->filename);
   string line;
   stringstream ss;
+
   ofstream tmpfile;
-  string tmpname = this->filename + "-fp.tmp";
+  string tmpname = getFilePath(outdir, arrayname + ".tmp");
   tmpfile.open(tmpname, std::fstream::app);
 
   // Step 1: append sort key to the end of every line
@@ -412,9 +445,9 @@ void Loader::loadp() {
 
   // Step 2: external sort
   int sortCol = this->nDim + this->nAttr + 1;
-  string outfile = this->filename + ".sorted";
+  string sortedfile = getFilePath(outdir, arrayname + ".sorted");
   // TODO: this is incredibly unsecure...
-  string cmd = "sort -t, -k" + std::to_string(sortCol) + " " + tmpname + " -o " + outfile;
+  string cmd = "sort -t, -k" + std::to_string(sortCol) + " " + tmpname + " -o " + sortedfile;
   std::system(cmd.c_str());
 
   // removes first temp file
@@ -422,10 +455,12 @@ void Loader::loadp() {
     perror( "Error deleting file" );
   }
 
+  // Step 3: divide into fixed physical tiles and create index file
+  Loader::tilep(outdir, sortedfile, tileMemLimit);
 }
 
-void Loader::tilep() {
-  string sortedfname = this->filename + ".sorted";
+void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
+  //string sortedfname = this->filename + ".sorted";
   ifstream infile(sortedfname);
   string line;
   int tileIDCounter = 0;
@@ -481,7 +516,7 @@ void Loader::tilep() {
         int64_t attr = (int64_t)strtoll((*it).c_str(), NULL, 10);
         attributes.push_back(attr);
 
-        string attrfname = "tile-attrs[" + to_string(i) + "]-" + to_string(tileIDCounter) + "-fp.dat";
+        string attrfname = getFilePath(outdir, "tile-attrs[" + to_string(i) + "]-" + to_string(tileIDCounter) + "-fp.dat");
         // Serializing data into 8 bytes
         attrBufMap[attrfname].append((char *)(&attr), 8);
         ++it;
@@ -522,7 +557,7 @@ void Loader::tilep() {
         }
         indexBuf << tileIDCounter << endl;
         // write to disk
-        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp");
+        Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp", outdir);
         // Increment tile id
         tileIDCounter++;
 
@@ -531,8 +566,8 @@ void Loader::tilep() {
         minCoords.clear();
         maxCoords.clear();
         for (int i = 0; i < nDim; ++i) {
-          minCoords.push_back(90000);
-          maxCoords.push_back(-90000);
+          minCoords.push_back(LLONG_MAX);
+          maxCoords.push_back(LLONG_MIN);
         }
       }
 
@@ -541,7 +576,7 @@ void Loader::tilep() {
 
   // Write final tile to disk
   if (coordBuf.str().size() > 0) {
-    Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp"); 
+    Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, to_string(tileIDCounter) + "-fp", outdir);
   // Write index line of last tile
     for (vector<int64_t>::iterator itm = minCoords.begin(); itm != minCoords.end(); ++itm) {
       indexBuf << *itm << ",";
@@ -554,19 +589,53 @@ void Loader::tilep() {
 
   // Write index to disk
   ofstream indexfile;
-  indexfile.open("myindex-fp.txt");
+  indexfile.open(getFilePath(outdir, "index.txt"));
   indexfile << indexBuf.str();
   indexfile.close();
 
   // Compress each attribute tile
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
     string key = it->first;
-    dbgmsg("Compressing tile: " + key);
     Loader::compressTile(key.c_str());
   }
 }
 
 // Private functions
+// Returns filename from path
+// TODO: use Boost library instead?
+string Loader::getFileName(const string& s) {
+
+  char sep = '/';
+  size_t i = s.rfind(sep, s.length());
+  if (i != string::npos) {
+    return(s.substr(i+1, s.length() - i));
+  }
+
+  return s;
+}
+
+string Loader::removeExtension(const string& filename) {
+  size_t lastdot = filename.find_last_of(".");
+  if (lastdot == std::string::npos) {
+    return filename;
+  }
+  return filename.substr(0, lastdot);
+}
+
+string Loader::getFilePath(const string& dirpath, const string& filename) {
+  return dirpath + "/" + filename;
+}
+
+string Loader::getDirPath(const string& filepath) {
+  char sep = '/';
+  size_t i = filepath.rfind(sep, filepath.length());
+  if (i != string::npos) {
+    return filepath.substr(0, i);
+  }
+
+  return filepath;
+}
+
 // TODO: fix for negative numbers, shift the ranges...
 //       use shiftCoord helper
 // http://www-graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN

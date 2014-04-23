@@ -14,13 +14,14 @@ class Indexer {
     int nAttr;
     vector<int64_t> ranges;
     string indexfile;
+    string arraydir;
     string suffix;
 
     vector<string> * tileids;
     map<int, vector<string>> * attrToTileMap;
 
     // Constructor
-    Indexer(int nDim, vector<int64_t> ranges, int nAttr, string indexfile);
+    Indexer(int nDim, vector<int64_t> ranges, int nAttr, string arraydir);
 
     // Destructor
     ~Indexer();

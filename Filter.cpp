@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "Debug.h"
@@ -18,6 +17,7 @@ Filter::Filter(Indexer * indexer, int attrIndex, FilterType ftype, int64_t value
   this->ftype = ftype;
   this->value = value;
   this->name = name;
+  this->outdir = indexer->arraydir + "/" + name;
 }
 
 // Destructor
@@ -27,7 +27,7 @@ Filter::~Filter() {}
 void Filter::filter() {
   // Create output directory
   // TODO: add better error handling
-  if (mkdir(this->name.c_str(), S_IRWXU) != 0) {
+  if (mkdir(outdir.c_str(), S_IRWXU) != 0) {
     perror("something went wrong");
     return;
   }
@@ -46,14 +46,16 @@ void Filter::filterTile(string tileid) {
   // work with compressed data
   string rleAttrTile = indexer->getRLEAttrTileById(attrIndex, tileid);
 
+  string coordTilePath = indexer->arraydir + "/" + coordTile;
+  string rleAttrTilePath = indexer->arraydir + "/" + rleAttrTile;
   // input files
   FILE * coordFilep;
   FILE * attrFilep;
-  coordFilep = fopen(coordTile.c_str(), "r");
+  coordFilep = fopen(coordTilePath.c_str(), "r");
   if (!coordFilep) {
     perror("Coord tile doesn't exist");
   }
-  attrFilep = fopen(rleAttrTile.c_str(), "r");
+  attrFilep = fopen(rleAttrTilePath.c_str(), "r");
   if (!attrFilep) {
     perror("RLE Attr tile doesn't exist");
   }
@@ -67,9 +69,11 @@ void Filter::filterTile(string tileid) {
 
   ofstream outCoordFile;
   ofstream outAttrFile;
-  string cfilename = this->name + "/" + coordTile;
-  string afilename = this->name + "/" + rleAttrTile;
+  string cfilename = outdir + "/" + coordTile;
+  string afilename = outdir + "/" + rleAttrTile;
 
+  dbgmsg("cfilename: " + cfilename);
+  dbgmsg("afilename: " + afilename);
   if (!outCoordFile.is_open()) {
     outCoordFile.open(cfilename, std::fstream::app);
   }

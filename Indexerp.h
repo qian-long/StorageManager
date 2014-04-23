@@ -20,7 +20,7 @@ class Indexerp: public virtual Indexer {
     //set<string> *tileidset;
 
     // Constructor
-    Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string indexfile);
+    Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string arraydir);
 
     // Destructor
     ~Indexerp();

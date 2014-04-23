@@ -14,8 +14,8 @@ class Subarray {
     vector<int64_t> * subranges;
     vector<int64_t> * ranges;
 
-    // size of square
-    int64_t stride;
+    int64_t stride; // size of square
+    string outdir; // where output of query will end up
 
     // Constructor
     Subarray(string name, Indexer * indexer, vector<int64_t> * subranges, vector<int64_t> * ranges, int64_t stride);

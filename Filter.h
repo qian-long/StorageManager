@@ -9,10 +9,11 @@ class Filter {
     Indexer * indexer; 
 
     enum FilterType { GT, GE, EQ, LT, LE };
-    int64_t value;
-    FilterType ftype;
-    int attrIndex;
-    string name;
+    int64_t value; // value for comparison
+    FilterType ftype; // type of filter
+    int attrIndex; // which attribute to filter on
+    string name; // name of output directory
+    string outdir; // output directory
 
     // Constructor
     Filter(Indexer * indexer, int attrIndex, FilterType ftype, int64_t value, string name);

@@ -20,72 +20,6 @@ void printVector(vector<string> * vec) {
 // Main function
 int main(int argc, char *argv[]) {
 
-  // TODO: Read this from config file (probably postgres) later
-  /*
-  int64_t nDim = 2;
-  int64_t nAttribute = 1;
-  int stride = 2;
-  uint64_t tile_size = 16*4;
-
-  vector<int64_t> ranges;
-  ranges.push_back(0);
-  ranges.push_back(10);
-  ranges.push_back(0);
-  ranges.push_back(10);
-  string csvfile = "data/bb1.csv";
-  //string csvfile = "data/compress-tiny1.csv";
-  //string csvfile = "data/compress-tiny.csv";
-  //string csvfile = "data/compress-tiny2.csv";
-
-  
-  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, tile_size);
-  cout << "Hello, world" << endl;
-
-  cout << "loader->load()" << endl;
-  loader->load();
-  cout << "loader->tile()" << endl;
-  loader->tile();
-
-
-  Indexer *indexer = new Indexer(nDim, ranges, nAttribute, stride, "myindex.txt");
-  int attrIndex = 0;
-  vector<string> *tiles = indexer->findTilesByAttribute(attrIndex);
-  cout << "After indexer construction" << endl;
-  for (vector<string>::iterator itc = tiles->begin(); itc != tiles->end(); ++itc) {
-      cout << *itc << endl;
-  }
-
-
-  Filter::FilterType ftype = Filter::FilterType::GT;
-  int64_t val = 4;
-  string filtername = "output-filter-GT-4";
-  Filter * f1 = new Filter(indexer, attrIndex, ftype, val, filtername);
-  cout << "\n\nFILTER: " << endl;
-  f1->filter();
-
-  vector<int64_t> subranges;
-  subranges.push_back(3);
-  subranges.push_back(7);
-  subranges.push_back(3);
-  subranges.push_back(7);
-
-  vector<string> *subtiles = indexer->getTilesByDimSubRange(&subranges);
-  vector<string> * wholeTiles = indexer->getWholeTilesByDimSubRange(&subranges);
-  vector<string> * partialTiles = indexer->getPartialTilesByDimSubRange(&subranges);
-
-  cout << "all sub tiles" << endl;
-  printVector(subtiles);
-  cout << "whole sub tiles" << endl;
-  printVector(wholeTiles);
-  cout << "partial sub tiles" << endl;
-  printVector(partialTiles);
-
-  cout << "Subarray: " << endl;
-  string subarrayName = "output-subarray0";
-  Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
-
-  s1->execute();
-  */
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 2;
@@ -97,60 +31,22 @@ int main(int argc, char *argv[]) {
   ranges.push_back(0);
   ranges.push_back(10);
   string csvfile = "data/bb2.csv";
-  //string csvfile = "data/compress-tiny1.csv";
-  //string csvfile = "data/compress-tiny.csv";
-  //string csvfile = "data/compress-tiny2.csv";
 
 
-  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute, stride, tile_size);
-  cout << "loader->loadp()" << endl;
-  loader->loadp();
-  cout << "loader->tilep()" << endl;
-  loader->tilep();
-  cout << "loader->load()" << endl;
-  loader->load();
-  cout << "loader->tile()" << endl;
-  loader->tile();
+  cout << "Loading csvfile: " << csvfile << endl;
+  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
+  cout << "Fixed Logical Tiles Loading..." << endl;
+  loader->loadl(stride);
 
-  Indexerp *indexer = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
-  int attrIndex = 0;
+  cout << "Fixed Physical Tiles Loading..." << endl;
+  loader->loadp(tile_size);
 
-  Filter::FilterType ftype = Filter::FilterType::GT;
-  int64_t val = 4;
-  string filtername = "output-fp-filter-GT-4";
-  Filter * fp1 = new Filter(indexer, attrIndex, ftype, val, filtername);
-  cout << "\n\nFILTER: " << endl;
-  fp1->filter();
-
-  vector<int64_t> subranges;
-  subranges.push_back(4);
-  subranges.push_back(6);
-  subranges.push_back(3);
-  subranges.push_back(6);
-
-  cout << "all sub tiles [4,6] [3,6]" << endl;
-  vector<string> * subtiles = indexer->getTilesByDimSubRange(&subranges);
-  vector<string> * wholeTiles = indexer->getWholeTilesByDimSubRange(&subranges);
-  vector<string> * partialTiles = indexer->getPartialTilesByDimSubRange(&subranges);
-
-  cout << "all sub tiles" << endl;
-  printVector(subtiles);
-  cout << "whole sub tiles" << endl;
-  printVector(wholeTiles);
-  cout << "partial sub tiles" << endl;
-  printVector(partialTiles);
-
-  cout << "Subarray: " << endl;
-  string subarrayName = "output-fp-subarray0";
-  Subarray * s1 = new Subarray(subarrayName, indexer, &subranges, &ranges, stride);
-
-  s1->execute();
+  cout << "TESTING INDEXERS" << endl;
+  cout << "stride: " << stride << endl;
+  Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-bb2");
+  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-bb2");
 
   /*
-  cout << "TESTING INDEXERS" << endl;
-  Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "myindex-fp.txt");
-  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "myindex.txt");
-
   cout << endl << "FIXED PHYSICAL TILE IDS" << endl;
   for (vector<string>::iterator itp = indexerp->tileids->begin(); itp != indexerp->tileids->end(); ++itp) {
 
@@ -172,8 +68,117 @@ int main(int argc, char *argv[]) {
     cout << "coordTile: " << coordTile << endl;
   }
   */
+  
+  /*
+  int attrIndex = 0;
+  Filter::FilterType ftype = Filter::FilterType::GT;
+  int64_t val = 4;
+  string filtername = "filter-GT4";
+  Filter * fp1 = new Filter(indexerp, attrIndex, ftype, val, filtername);
+  cout << "\n\nFILTER on bb2 fixed physical: " << endl;
+  fp1->filter();
 
-  cout << "LLONG_MAX: " << LLONG_MAX << endl;
+  cout << "\nFILTER on bb2 fixed logical: " << endl;
+  Filter * fp2 = new Filter(indexerl, attrIndex, ftype, val, filtername);
+  fp2->filter();
+  */
+  vector<int64_t> subranges;
+  subranges.push_back(4);
+  subranges.push_back(6);
+  subranges.push_back(3);
+  subranges.push_back(6);
+  string subarrayName = "subarray0";
+
+  /*
+  cout << "\nSUBARRAY on bb2 fixed physical tiles..." << endl;
+  vector<string> * subtiles = indexerp->getTilesByDimSubRange(&subranges);
+  vector<string> * wholeTiles = indexerp->getWholeTilesByDimSubRange(&subranges);
+  vector<string> * partialTiles = indexerp->getPartialTilesByDimSubRange(&subranges);
+
+  cout << "all sub tiles" << endl;
+  printVector(subtiles);
+  cout << "whole sub tiles" << endl;
+  printVector(wholeTiles);
+  cout << "partial sub tiles" << endl;
+  printVector(partialTiles);
+  */
+  Subarray * s1 = new Subarray(subarrayName, indexerp, &subranges, &ranges, stride);
+
+  s1->execute();
+  cout << "\nSUBARRAY on bb2 fixed logical tiles..." << endl;
+  cout << "indexerl->tileids" << endl;
+  printVector(indexerl->tileids);
+  vector<string> * subtiles1 = indexerl->getTilesByDimSubRange(&subranges);
+  vector<string> * wholeTiles1 = indexerl->getWholeTilesByDimSubRange(&subranges);
+  vector<string> * partialTiles1 = indexerl->getPartialTilesByDimSubRange(&subranges);
+
+  cout << "\nSUBARRAY [4,6] [3,6]" << endl;
+  cout << "fixed logical: all sub tiles" << endl;
+  printVector(subtiles1);
+  cout << "fixed logical: whole sub tiles" << endl;
+  printVector(wholeTiles1);
+  cout << "fixed logical: partial sub tiles" << endl;
+  printVector(partialTiles1);
+
+  vector<int64_t> subranges2;
+  subranges2.push_back(5);
+  subranges2.push_back(7);
+  subranges2.push_back(3);
+  subranges2.push_back(6);
+  vector<string> * subtiles2 = indexerl->getTilesByDimSubRange(&subranges2);
+  vector<string> * wholeTiles2 = indexerl->getWholeTilesByDimSubRange(&subranges2);
+  vector<string> * partialTiles2 = indexerl->getPartialTilesByDimSubRange(&subranges2);
+
+  cout << "\nSUBARRAY [5,7] [3,6]" << endl;
+  cout << "fixed logical: all sub tiles" << endl;
+  printVector(subtiles2);
+  cout << "fixed logical: whole sub tiles" << endl;
+  printVector(wholeTiles2);
+  cout << "fixed logical: partial sub tiles" << endl;
+  printVector(partialTiles2);
+
+  vector<int64_t> subranges3;
+  subranges3.push_back(5);
+  subranges3.push_back(7);
+  subranges3.push_back(2);
+  subranges3.push_back(6);
+  vector<string> * subtiles3 = indexerl->getTilesByDimSubRange(&subranges3);
+  vector<string> * wholeTiles3 = indexerl->getWholeTilesByDimSubRange(&subranges3);
+  vector<string> * partialTiles3 = indexerl->getPartialTilesByDimSubRange(&subranges3);
+
+  cout << "\nSUBARRAY [5,7] [2,6]" << endl;
+  cout << "fixed logical: all sub tiles" << endl;
+  printVector(subtiles3);
+  cout << "fixed logical: whole sub tiles" << endl;
+  printVector(wholeTiles3);
+  cout << "fixed logical: partial sub tiles" << endl;
+  printVector(partialTiles3);
+
+  vector<int64_t> subranges4;
+  subranges4.push_back(4);
+  subranges4.push_back(7);
+  subranges4.push_back(2);
+  subranges4.push_back(7);
+  vector<string> * subtiles4 = indexerl->getTilesByDimSubRange(&subranges4);
+  vector<string> * wholeTiles4 = indexerl->getWholeTilesByDimSubRange(&subranges4);
+  vector<string> * partialTiles4 = indexerl->getPartialTilesByDimSubRange(&subranges4);
+
+  cout << "\nSUBARRAY [4,7] [2,7]" << endl;
+  cout << "fixed logical: all sub tiles" << endl;
+  printVector(subtiles4);
+  cout << "fixed logical: whole sub tiles" << endl;
+  printVector(wholeTiles4);
+  cout << "fixed logical: partial sub tiles" << endl;
+  printVector(partialTiles4);
+
+
+
+
+  /*
+  Subarray * s2 = new Subarray(subarrayName, indexerl, &subranges, &ranges, stride);
+  s2->execute();
+  */
+
   return 0;
 }
 

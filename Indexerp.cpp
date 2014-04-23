@@ -7,7 +7,7 @@
 using namespace std;
 
 // Constructor
-Indexerp::Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string indexfile): Indexer(nDim, ranges, nAttr, indexfile) {
+Indexerp::Indexerp(int nDim, vector<int64_t> ranges, int nAttr, string arraydir): Indexer(nDim, ranges, nAttr, arraydir) {
 
   this->boxToTileID = new map<BoundingBox *, string>();
   this->tileIDToBox = new map<string, BoundingBox *>();
@@ -30,7 +30,7 @@ Indexerp::~Indexerp() {
 // Modifies boxToTileID, tileIDToBox
 // Uses indexfile, nDim
 void Indexerp::parseIndexFile() {
-  ifstream infile("myindex-fp.txt");
+  ifstream infile(indexfile);
   string line;
   if (infile.is_open()) {
     while (getline(infile, line)) {

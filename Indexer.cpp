@@ -3,12 +3,15 @@
 #include "Indexer.h"
 
 using namespace std;
-Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, string indexfile) {
+Indexer::Indexer(int nDim, vector<int64_t> ranges, int nAttr, string arraydir) {
   this->nDim = nDim;
   this->nAttr = nAttr;
   this->ranges = ranges;
-  this->indexfile = indexfile;
+  this->arraydir = arraydir;
   this->suffix = "";
+
+  // TODO: use Boost for robustness?
+  this->indexfile = arraydir + "/index.txt";
 
   // Initialize maps
   this->tileids = new vector<string>();

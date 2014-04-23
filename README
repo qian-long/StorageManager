@@ -1,4 +1,7 @@
 To run:
 make clean;make
+./loader
 
+To run in debug;
+make clean;make debug
 ./loader

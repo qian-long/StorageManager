@@ -15,6 +15,7 @@ Subarray::Subarray(string name, Indexer * indexer, vector<int64_t> * subranges, 
   this->subranges = subranges;
   this->ranges = ranges;
   this->stride = stride;
+  this->outdir = indexer->arraydir + "/" + name;
 }
 
 Subarray::~Subarray() {
@@ -24,7 +25,7 @@ Subarray::~Subarray() {
 void Subarray::execute() {
   // TODO: add better error handling
   // Create directory for new array
-  if (mkdir(this->name.c_str(), S_IRWXU) != 0) {
+  if (mkdir(outdir.c_str(), S_IRWXU) != 0) {
     perror ("Directory exists, query executed before");
     return;
   }
@@ -37,8 +38,8 @@ void Subarray::execute() {
     string tileid = *it;
     // Copy coordinate tile
     string coordTile = indexer->getCoordTileById(tileid);
-    ifstream sourceTile(coordTile, ios::binary);
-    ofstream destTile(this->name + "/" + coordTile, ios::binary);
+    ifstream sourceTile(indexer->arraydir + "/" + coordTile, ios::binary);
+    ofstream destTile(outdir + "/" + coordTile, ios::binary);
     destTile << sourceTile.rdbuf();
     sourceTile.close();
     destTile.close();
@@ -47,8 +48,8 @@ void Subarray::execute() {
     // Copy all the compressed attribute tiles
     for (vector<string>::iterator ita = rleTiles->begin(); ita != rleTiles->end(); ++ita) {
       string attrTile = *ita;
-      ifstream source(attrTile, ios::binary);
-      ofstream dest(this->name + "/" + attrTile, ios::binary);
+      ifstream source(indexer->arraydir + "/" + attrTile, ios::binary);
+      ofstream dest(outdir + "/" + attrTile, ios::binary);
       dest << source.rdbuf();
       source.close();
       dest.close();
@@ -73,15 +74,16 @@ void Subarray::execute() {
     // Start counting at 1
     uint64_t cellNum = 1;
     string coordTile = indexer->getCoordTileById(tileid);
+    string coordTilePath = indexer->arraydir + "/" + coordTile;
     FILE * coordFilep;
-    coordFilep = fopen(coordTile.c_str(), "r");
+    coordFilep = fopen(coordTilePath.c_str(), "r");
     if (!coordFilep) {
       perror("Coord tile doesn't exist");
     }
     ofstream outCoordFile;
     stringstream outCoordBuf;
 
-    string cfilename = this->name + "/" + coordTile;
+    string cfilename = outdir + "/" + coordTile;
     uint64_t usedMem = 0;
     while (uint64_t creadsize = fread((char *)inCoordBuf, 1, limit, coordFilep)) {
       dbgmsg("creadsize: " + to_string(creadsize));
@@ -155,7 +157,8 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
 
   FILE * attrFilep;
   string attrTile = indexer->getRLEAttrTileById(attrIndex, tileid);
-  attrFilep = fopen(attrTile.c_str(), "r");
+  string attrTilePath = indexer->arraydir + "/" + attrTile;
+  attrFilep = fopen(attrTilePath.c_str(), "r");
 
   if (!attrFilep) {
     perror("Subarray RLE Attr tile doesn't exist");
@@ -170,7 +173,7 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
   // output buffer and file
   stringstream outAttrBuf;
   ofstream outAttrFile;
-  string afilename = this->name + "/" + attrTile;
+  string afilename = outdir + "/" + attrTile;
 
   while (uint64_t areadsize = fread((char *) inAttrBuf, 1, limit, attrFilep)) {
     for (uint64_t i = 0; i < areadsize; i = i + 16) {

@@ -12,12 +12,10 @@ using namespace std;
 class IndexerL: public virtual Indexer {
 
   public:
-    int stride;
-
     set<string> *tileidset;
 
     // Constructor
-    IndexerL(int nDim, vector<int64_t> ranges, int nAttr, int stride, string indexfile);
+    IndexerL(int nDim, vector<int64_t> ranges, int nAttr, int pstride, string arraydir);
 
     // Destructor
     ~IndexerL();
@@ -32,6 +30,8 @@ class IndexerL: public virtual Indexer {
     vector<string> * getPartialTilesByDimSubRange(vector<int64_t> * subranges);
 
   private:
+
+    int stride;
     // Populates tileids
     vector<string> * generateTileIds();
 
