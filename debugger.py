@@ -97,8 +97,16 @@ def main():
 if __name__ == "__main__":
   main()
   convert_dir("output-fl-bb2");
-  convert_dir('output-fl-bb2/subarray0')
   convert_dir("output-FP-bb2");
-  convert_dir("output-FP-bb2/subarray0")
+
+  convert_dir('output-fl-bb2/subarray4')
+  convert_dir("output-FP-bb2/subarray4")
+  convert_dir('output-fl-bb2/subarray1')
+  convert_dir("output-FP-bb2/subarray1")
+  convert_dir('output-fl-bb2/subarray2')
+  convert_dir("output-FP-bb2/subarray2")
+  convert_dir('output-fl-bb2/subarray3')
+  convert_dir("output-FP-bb2/subarray3")
+
   #convert_dir('output-filter-GT-4')
   #convert_dir('output-subarray0')

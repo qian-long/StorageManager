@@ -46,8 +46,6 @@ IndexerL::~IndexerL() {
 }
 
 vector<string> * IndexerL::getTilesByDimSubRange(vector<int64_t> * subranges) {
-  dbgmsg("In getTileByDimSubRange");
-  dbgmsg("stride: " + to_string(stride));
   vector<int64_t>::iterator it = subranges->begin();
   //map<int, vector<int>> wholeTilesMap;
   // maps dimension to all id ranges for that dimension
@@ -59,8 +57,6 @@ vector<string> * IndexerL::getTilesByDimSubRange(vector<int64_t> * subranges) {
     int64_t endRange = *(it++);
 
     dbgmsg("dim: " + to_string(i) + " startRange : " + to_string(startRange) + " endRange: " + to_string(endRange));
-    //int pbegin = (int) floor((double) startRange / stride);
-    //int pend = (int) ceil((double) endRange / stride);
     int pbegin = startRange / stride;
     int pend = endRange / stride;
 
@@ -72,18 +68,12 @@ vector<string> * IndexerL::getTilesByDimSubRange(vector<int64_t> * subranges) {
 
   }
 
-  dbgmsg("allTilesMap->size(): " + to_string(allTilesMap.size()));
-  dbgmsg("totalmapsize: " + to_string(totalmapsize));
   vector<string> * allTileIDs = IndexerL::combination(&allTilesMap);
-  dbgmsg("allTilesIDS.size(): " + to_string(allTileIDs->size()));
-  for(vector<string>::iterator it = allTileIDs->begin(); it != allTileIDs->end(); ++it) {
-    dbgmsg("potential tile id: " + *it);
-  }
+
   // take intersection with all tileids
   vector<string> * output = new vector<string>();
   for (vector<string>::iterator it = allTileIDs->begin(); it != allTileIDs->end(); ++it) {
     if (tileidset->find(*it) != tileidset->end()) {
-      dbgmsg("Found overlapping tile: " + *it);
       output->push_back(*it);
     }
   }
@@ -93,7 +83,6 @@ vector<string> * IndexerL::getTilesByDimSubRange(vector<int64_t> * subranges) {
 }
 
 vector<string> * IndexerL::getWholeTilesByDimSubRange(vector<int64_t> * subranges) {
-  dbgmsg("In getWholeTiles");
   vector<int64_t>::iterator it = subranges->begin();
   map<int, vector<int>> wholeTilesMap;
 
@@ -104,10 +93,6 @@ vector<string> * IndexerL::getWholeTilesByDimSubRange(vector<int64_t> * subrange
     int64_t endRange = *(it++);
 
     dbgmsg("dim: " + to_string(i) + " startRange : " + to_string(startRange) + " endRange: " + to_string(endRange));
-    /*
-    int wbegin = (int) ceil((double) startRange / this->stride);
-    int wend = (int) floor((double) endRange / this->stride);
-    */
     int wbegin;
     int wend;
 
@@ -172,16 +157,11 @@ vector<string> * IndexerL::getPartialTilesByDimSubRange(vector<int64_t> * subran
 // Keys are ints from 0 to nDim - 1
 vector<string> * IndexerL::combination(map<int, vector<int>> * tileIDMaps) {
 
-  dbgmsg("In combination");
   vector<string> * output = new vector<string>();
 
-  //map<int, vector<int>>::iterator it = tileIDMaps->begin();
-  //int first = *it;
   vector<int> firstVector = (*tileIDMaps)[0];
 
   for (vector<int>::iterator it = firstVector.begin(); it != firstVector.end(); ++it) {
-
-    dbgmsg("In combination, first insert to output: " + to_string(*it));
     output->push_back(to_string(*it));
   }
 
@@ -206,7 +186,6 @@ vector<string> * IndexerL::combination(map<int, vector<int>> * tileIDMaps) {
 
     // insert to output
     for (vector<string>::iterator itc = copy.begin(); itc != copy.end(); ++itc) {
-      dbgmsg("In combination, insert to output: " + *itc);
       output->push_back(*itc);
     }
   }

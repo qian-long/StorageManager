@@ -87,97 +87,68 @@ int main(int argc, char *argv[]) {
   subranges.push_back(6);
   subranges.push_back(3);
   subranges.push_back(6);
-  string subarrayName = "subarray0";
+  string subarray0Name = "subarray1";
 
-  /*
-  cout << "\nSUBARRAY on bb2 fixed physical tiles..." << endl;
-  vector<string> * subtiles = indexerp->getTilesByDimSubRange(&subranges);
-  vector<string> * wholeTiles = indexerp->getWholeTilesByDimSubRange(&subranges);
-  vector<string> * partialTiles = indexerp->getPartialTilesByDimSubRange(&subranges);
+  cout << "\nSUBARRAY0 [4,6] [3,6]" << endl;
+  cout << "\nSUBARRAY0 on bb2 fixed physical tiles..." << endl;
 
-  cout << "all sub tiles" << endl;
-  printVector(subtiles);
-  cout << "whole sub tiles" << endl;
-  printVector(wholeTiles);
-  cout << "partial sub tiles" << endl;
-  printVector(partialTiles);
-  */
-  Subarray * s1 = new Subarray(subarrayName, indexerp, &subranges, &ranges, stride);
-
+  Subarray * s1 = new Subarray(subarray0Name, indexerp, &subranges, &ranges, stride);
   s1->execute();
-  cout << "\nSUBARRAY on bb2 fixed logical tiles..." << endl;
-  cout << "indexerl->tileids" << endl;
-  printVector(indexerl->tileids);
-  vector<string> * subtiles1 = indexerl->getTilesByDimSubRange(&subranges);
-  vector<string> * wholeTiles1 = indexerl->getWholeTilesByDimSubRange(&subranges);
-  vector<string> * partialTiles1 = indexerl->getPartialTilesByDimSubRange(&subranges);
 
-  cout << "\nSUBARRAY [4,6] [3,6]" << endl;
-  cout << "fixed logical: all sub tiles" << endl;
-  printVector(subtiles1);
-  cout << "fixed logical: whole sub tiles" << endl;
-  printVector(wholeTiles1);
-  cout << "fixed logical: partial sub tiles" << endl;
-  printVector(partialTiles1);
+  cout << "\nSUBARRAY0 on bb2 fixed logical tiles..." << endl;
+  Subarray * s2 = new Subarray(subarray0Name, indexerl, &subranges, &ranges, stride);
+  s2->execute();
+
 
   vector<int64_t> subranges2;
   subranges2.push_back(5);
   subranges2.push_back(7);
   subranges2.push_back(3);
   subranges2.push_back(6);
-  vector<string> * subtiles2 = indexerl->getTilesByDimSubRange(&subranges2);
-  vector<string> * wholeTiles2 = indexerl->getWholeTilesByDimSubRange(&subranges2);
-  vector<string> * partialTiles2 = indexerl->getPartialTilesByDimSubRange(&subranges2);
-
+  string subarray2Name = "subarray2";
   cout << "\nSUBARRAY [5,7] [3,6]" << endl;
-  cout << "fixed logical: all sub tiles" << endl;
-  printVector(subtiles2);
-  cout << "fixed logical: whole sub tiles" << endl;
-  printVector(wholeTiles2);
-  cout << "fixed logical: partial sub tiles" << endl;
-  printVector(partialTiles2);
+
+  cout << "\nSUBARRAY0 on bb2 fixed physical tiles..." << endl;
+  Subarray * s3 = new Subarray(subarray2Name, indexerp, &subranges2, &ranges, stride);
+  s3->execute();
+
+  cout << "\nSUBARRAY0 on bb2 fixed logical tiles..." << endl;
+  Subarray * s4 = new Subarray(subarray2Name, indexerl, &subranges2, &ranges, stride);
+  s4->execute();
+
 
   vector<int64_t> subranges3;
   subranges3.push_back(5);
   subranges3.push_back(7);
   subranges3.push_back(2);
   subranges3.push_back(6);
-  vector<string> * subtiles3 = indexerl->getTilesByDimSubRange(&subranges3);
-  vector<string> * wholeTiles3 = indexerl->getWholeTilesByDimSubRange(&subranges3);
-  vector<string> * partialTiles3 = indexerl->getPartialTilesByDimSubRange(&subranges3);
-
+  string subarray3Name = "subarray3";
   cout << "\nSUBARRAY [5,7] [2,6]" << endl;
-  cout << "fixed logical: all sub tiles" << endl;
-  printVector(subtiles3);
-  cout << "fixed logical: whole sub tiles" << endl;
-  printVector(wholeTiles3);
-  cout << "fixed logical: partial sub tiles" << endl;
-  printVector(partialTiles3);
+  cout << "\nSUBARRAY3 on bb2 fixed physical tiles..." << endl;
+  Subarray * s5 = new Subarray(subarray3Name, indexerp, &subranges3, &ranges, stride);
+  s5->execute();
+
+  cout << "\nSUBARRAY3 on bb2 fixed logical tiles..." << endl;
+  Subarray * s6 = new Subarray(subarray3Name, indexerl, &subranges3, &ranges, stride);
+  s6->execute();
+
 
   vector<int64_t> subranges4;
   subranges4.push_back(4);
   subranges4.push_back(7);
   subranges4.push_back(2);
   subranges4.push_back(7);
-  vector<string> * subtiles4 = indexerl->getTilesByDimSubRange(&subranges4);
-  vector<string> * wholeTiles4 = indexerl->getWholeTilesByDimSubRange(&subranges4);
-  vector<string> * partialTiles4 = indexerl->getPartialTilesByDimSubRange(&subranges4);
-
+  string subarray4Name = "subarray4";
   cout << "\nSUBARRAY [4,7] [2,7]" << endl;
-  cout << "fixed logical: all sub tiles" << endl;
-  printVector(subtiles4);
-  cout << "fixed logical: whole sub tiles" << endl;
-  printVector(wholeTiles4);
-  cout << "fixed logical: partial sub tiles" << endl;
-  printVector(partialTiles4);
+  cout << "\nSUBARRAY3 on bb2 fixed physical tiles..." << endl;
+  Subarray * s7 = new Subarray(subarray4Name, indexerp, &subranges4, &ranges, stride);
+  s7->execute();
+
+  cout << "\nSUBARRAY3 on bb2 fixed logical tiles..." << endl;
+  Subarray * s8 = new Subarray(subarray4Name, indexerl, &subranges4, &ranges, stride);
+  s8->execute();
 
 
-
-
-  /*
-  Subarray * s2 = new Subarray(subarrayName, indexerl, &subranges, &ranges, stride);
-  s2->execute();
-  */
 
   return 0;
 }
