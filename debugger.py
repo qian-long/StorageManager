@@ -76,6 +76,9 @@ def convert_dir(dirname):
     print "rle tile", tile
     uncompressRLE(dirname + "/" + tile)
 
+  child_dirs = [os.path.join(dirname, o) for o in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, o))]
+  for d in child_dirs:
+    convert_dir(d)
 
 def main():
   nDim = 2
@@ -96,17 +99,5 @@ def main():
 
 if __name__ == "__main__":
   main()
-  convert_dir("output-fl-bb2");
-  convert_dir("output-FP-bb2");
-
-  convert_dir('output-fl-bb2/subarray4')
-  convert_dir("output-FP-bb2/subarray4")
-  convert_dir('output-fl-bb2/subarray1')
-  convert_dir("output-FP-bb2/subarray1")
-  convert_dir('output-fl-bb2/subarray2')
-  convert_dir("output-FP-bb2/subarray2")
-  convert_dir('output-fl-bb2/subarray3')
-  convert_dir("output-FP-bb2/subarray3")
-
-  #convert_dir('output-filter-GT-4')
-  #convert_dir('output-subarray0')
+  convert_dir("output-fl-small");
+  convert_dir("output-FP-small");

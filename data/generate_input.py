@@ -11,5 +11,17 @@ def generate(LIMIT, num_cells, num_col):
     string = string + str(int(random.random()*LIMIT))
     print string
 
+def uniform(start, end, num_lines, num_cols):
+ for i in xrange(num_cells):
+  string = ""
+  for j in xrange(num_col-1):
+    string = string + str(random.randint(start, end)) + ","
+
+  string = string + str(random.randint(start, end))
+  print string
+
+def skewed(start, end, num_lines, num_cols):
+  pass
+
 if __name__ == "__main__":
-  generate(100, 100, 3)
+  uniform(0, 1000, 100, 3)

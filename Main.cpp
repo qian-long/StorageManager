@@ -22,15 +22,15 @@ int main(int argc, char *argv[]) {
 
   int64_t nDim = 2;
   int64_t nAttribute = 1;
-  int stride = 2;
-  uint64_t tile_size = 16*4;
+  int stride = 100;
+  uint64_t tile_size = 16*100;
 
   vector<int64_t> ranges;
   ranges.push_back(0);
-  ranges.push_back(10);
+  ranges.push_back(1000);
   ranges.push_back(0);
-  ranges.push_back(10);
-  string csvfile = "data/bb2.csv";
+  ranges.push_back(1000);
+  string csvfile = "data/small.csv";
 
 
   cout << "Loading csvfile: " << csvfile << endl;
@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
 
   cout << "TESTING INDEXERS" << endl;
   cout << "stride: " << stride << endl;
-  Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-bb2");
-  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-bb2");
+  Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-" + loader->arrayname);
+  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-" + loader->arrayname);
 
   /*
   cout << endl << "FIXED PHYSICAL TILE IDS" << endl;
@@ -68,12 +68,11 @@ int main(int argc, char *argv[]) {
     cout << "coordTile: " << coordTile << endl;
   }
   */
-  
-  /*
+
   int attrIndex = 0;
   Filter::FilterType ftype = Filter::FilterType::GT;
-  int64_t val = 4;
-  string filtername = "filter-GT4";
+  int64_t val = 50;
+  string filtername = "filter-GT50";
   Filter * fp1 = new Filter(indexerp, attrIndex, ftype, val, filtername);
   cout << "\n\nFILTER on bb2 fixed physical: " << endl;
   fp1->filter();
@@ -81,15 +80,15 @@ int main(int argc, char *argv[]) {
   cout << "\nFILTER on bb2 fixed logical: " << endl;
   Filter * fp2 = new Filter(indexerl, attrIndex, ftype, val, filtername);
   fp2->filter();
-  */
+
   vector<int64_t> subranges;
-  subranges.push_back(4);
-  subranges.push_back(6);
-  subranges.push_back(3);
-  subranges.push_back(6);
+  subranges.push_back(1);
+  subranges.push_back(505);
+  subranges.push_back(2);
+  subranges.push_back(499);
   string subarray0Name = "subarray1";
 
-  cout << "\nSUBARRAY0 [4,6] [3,6]" << endl;
+  cout << "\nSUBARRAY0 [1,505] [2,499]" << endl;
   cout << "\nSUBARRAY0 on bb2 fixed physical tiles..." << endl;
 
   Subarray * s1 = new Subarray(subarray0Name, indexerp, &subranges, &ranges, stride);
@@ -101,12 +100,12 @@ int main(int argc, char *argv[]) {
 
 
   vector<int64_t> subranges2;
-  subranges2.push_back(5);
-  subranges2.push_back(7);
-  subranges2.push_back(3);
-  subranges2.push_back(6);
+  subranges2.push_back(710);
+  subranges2.push_back(905);
+  subranges2.push_back(710);
+  subranges2.push_back(900);
   string subarray2Name = "subarray2";
-  cout << "\nSUBARRAY [5,7] [3,6]" << endl;
+  cout << "\nSUBARRAY [710,905] [710,900]" << endl;
 
   cout << "\nSUBARRAY0 on bb2 fixed physical tiles..." << endl;
   Subarray * s3 = new Subarray(subarray2Name, indexerp, &subranges2, &ranges, stride);
@@ -118,12 +117,12 @@ int main(int argc, char *argv[]) {
 
 
   vector<int64_t> subranges3;
-  subranges3.push_back(5);
-  subranges3.push_back(7);
-  subranges3.push_back(2);
-  subranges3.push_back(6);
+  subranges3.push_back(0);
+  subranges3.push_back(1000);
+  subranges3.push_back(0);
+  subranges3.push_back(1000);
   string subarray3Name = "subarray3";
-  cout << "\nSUBARRAY [5,7] [2,6]" << endl;
+  cout << "\nSUBARRAY [0,1000] [0,1000]" << endl;
   cout << "\nSUBARRAY3 on bb2 fixed physical tiles..." << endl;
   Subarray * s5 = new Subarray(subarray3Name, indexerp, &subranges3, &ranges, stride);
   s5->execute();
@@ -134,12 +133,12 @@ int main(int argc, char *argv[]) {
 
 
   vector<int64_t> subranges4;
-  subranges4.push_back(4);
-  subranges4.push_back(7);
-  subranges4.push_back(2);
-  subranges4.push_back(7);
+  subranges4.push_back(253);
+  subranges4.push_back(759);
+  subranges4.push_back(904);
+  subranges4.push_back(1000);
   string subarray4Name = "subarray4";
-  cout << "\nSUBARRAY [4,7] [2,7]" << endl;
+  cout << "\nSUBARRAY [253,759] [904,1000]" << endl;
   cout << "\nSUBARRAY3 on bb2 fixed physical tiles..." << endl;
   Subarray * s7 = new Subarray(subarray4Name, indexerp, &subranges4, &ranges, stride);
   s7->execute();

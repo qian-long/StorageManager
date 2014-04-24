@@ -447,7 +447,14 @@ void Loader::loadp(uint64_t tileMemLimit) {
   int sortCol = this->nDim + this->nAttr + 1;
   string sortedfile = getFilePath(outdir, arrayname + ".sorted");
   // TODO: this is incredibly unsecure...
-  string cmd = "sort -t, -k" + std::to_string(sortCol) + " " + tmpname + " -o " + sortedfile;
+  // The -k m,n option lets you sort on a particular field (start at m, end at n):
+  // ex) sort -gt, -k1,1 -k2,2 small.csv
+  //string cmd = "sort -gt, -k1," + to_string(nDim) + " " + tmpname + " -o " + sortedfile;
+  string cmd = "sort -gt,";
+  for (int i = 1; i <= nDim; ++i) {
+    cmd += " -k" + to_string(i) + "," + to_string(i) + " ";
+  }
+  cmd += tmpname + " -o " + sortedfile;
   std::system(cmd.c_str());
 
   // removes first temp file
