@@ -3,12 +3,14 @@ import util
 import copy
 import fnmatch
 import os
+
+LOGGING = False
+
 # To Test:
 # process input file and fill out map of lines per file
 #   compute tile id
 # decompress tiles
 # Check size of each tile and total number of tiles
-
 def process_csv(filename, ndim, nattr, stride):
   lines_per_tile = {}
   f = open(filename, 'r')
@@ -48,7 +50,8 @@ def log_pass(msg):
   print green("PASS: " + msg)
 
 def log(msg):
-  print "LOG: " + msg
+  if LOGGING:
+    print "LOG: " + msg
 
 # TODO: fix for target output
 def check_logical_tiling(csvfile, ndim, nattr, stride):
@@ -144,7 +147,7 @@ def check_dual(dirname1, dirname2, ndim, nattr):
           error("%s size: %d not multiple of 8" % (attr_tiles[k], os.path.getsize(attr_tiles[k])))
         # Decompress attribute tile
         util.decompressRLE_to_csv(attr_tiles[k])
-        basename = os.path.basename(attr_tiles[k])
+        basename = os.path.basename(attr_tiles[k]).split('.')[0] + '.csv'
         decompressed_csv = os.path.join(dirname, "decompressed-" + basename)
 
         #util.binary_to_csv(dfname, 1)
@@ -158,13 +161,13 @@ def check_dual(dirname1, dirname2, ndim, nattr):
           error("coord file and attribute file have different number of lines")
         for l in xrange(len(coords)):
           coord = coords[l].strip()
-          attribute = attributes[i].strip()
+          attribute = attributes[l].strip()
           if coord not in dir_lines:
             dir_lines[coord] = {attribute: 0}
           dir_lines[coord][attribute] += 1
 
-    log("dirs[0]: " + str(dirs[0]))
-    log("dirs[1]: " + str(dirs[1]))
+    #log("dirs[0].keys(): " + str(dirs[0].keys()))
+    #log("dirs[1].keys(): " + str(dirs[1].keys()))
     same = compare_attr_maps(dirs[0], dirs[1])
     if same:
       log_pass("[%s] [%s] attribute [%d] match" % (dirname1, dirname2, i))
@@ -184,6 +187,8 @@ def compare_attr_maps(map1, map2):
     diff = set(map2[key].keys()) - set(map1[key].keys())
     if len(diff) != 0:
       log("map1[%s] and map2[%s] have different attributes for a coord" % (key, key))
+      log("map1[key]: " + str(map1[key]))
+      log("map2[key]: " + str(map2[key]))
       return False
 
     # check attribute counts for each key
@@ -218,7 +223,7 @@ if __name__ == "__main__":
   csvfiles = ['data/small.csv']
   arraydirs = ['output-fl-small', 'output-FP-small']
   subarrays = ['output-fl-small/subarray1', 'output-FP-small/subarray1']
-  filters = ['output-fl-small/subarray1', 'output-FP-small/subarray1']
+  filters = ['output-fl-small/filter-GT50', 'output-FP-small/filter-GT50']
   check_dual(arraydirs[0], arraydirs[1], 2, 1)
   check_dual(subarrays[0], subarrays[1], 2, 1)
   check_dual(filters[0], filters[1], 2, 1)
