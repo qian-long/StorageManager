@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 100;
-  uint64_t tile_size = 16*100;
+  uint64_t tile_size = 16*10;
 
   vector<int64_t> ranges;
   ranges.push_back(0);

@@ -80,7 +80,21 @@ def check_logical_tiling(csvfile, ndim, nattr, stride):
 
   log_pass("All attribute tiles have correct sizes")
 
-def clean_up(arraydirs):
+# TODO
+def setup_dir(arraydir, ndim, nattr):
+  log("Setting up %s for testing..." % arraydir)
+  coord_tiles = [os.path.join(filterdir, x) for x in fnmatch.filter(os.listdir(filterdir, 'tile-coords-*.dat'))]
+  attr_tiles = [os.path.join(filterdir, x) for x in fnmatch.filter(os.listdir(filterdir, 'decompressed-rle-tile-attrs[%d]-*.dat'))]
+
+
+  # convert coord .dat files to .csv
+  # decompress rle-attr-tiles .dat files directly to csv
+  pass
+
+# TODO
+def cleanup_dir(arraydir):
+  log("Cleaning up %s" % arraydir)
+  # remove all generated csv files in arraydir
   pass
 
 # convert all binaries in all array roots
@@ -90,8 +104,7 @@ def convert_root_arraydirs(arraydirs):
     util.convert_dir_recursive(dirname)
 
 # See if fixed logical and fixed physical grouping produce the same output
-# Note: fixed logical tiles probably aren't sorted, fixed physical tiles should be sorted
-# (can be different sorting keys)
+# Note: fixed logical tiles probably aren't sorted, fixed physical tiles should be sorted (can be different sorting keys)
 def check_dual(dirname1, dirname2, ndim, nattr):
   dirnames = [dirname1, dirname2]
   # might have duplicate lines
@@ -150,7 +163,6 @@ def check_dual(dirname1, dirname2, ndim, nattr):
         basename = os.path.basename(attr_tiles[k]).split('.')[0] + '.csv'
         decompressed_csv = os.path.join(dirname, "decompressed-" + basename)
 
-        #util.binary_to_csv(dfname, 1)
         fattr = open(decompressed_csv, 'r')
         fcoord = open(coord_tiles[k], 'r')
         coords = fcoord.readlines()
@@ -174,11 +186,13 @@ def check_dual(dirname1, dirname2, ndim, nattr):
     else:
       error("[%s] [%s] attribute [%d] DON'T match" % (dirname1, dirname2, i))
 
+# map1/map2 = {coordline: {attr: count, attr2: count2}, coordline1: {blah}}
 def compare_attr_maps(map1, map2):
   # check keys first
   diff = set(map1.keys()) - set(map2.keys())
   if len(diff) != 0:
-    log("map1 and map2 have different keys")
+    log("map1 %d and map2 %d have different keys" % (len(map1.keys()), len(map2.keys())))
+    log("diff: " + str(diff))
     return False
 
   map3 = copy.deepcopy(map1)
@@ -199,7 +213,6 @@ def compare_attr_maps(map1, map2):
 
   return True
 
-
 def compare_maps(map1, map2):
   # check keys first
   diff = set(map1.keys()) - set(map2.keys())
@@ -219,6 +232,83 @@ def compare_maps(map1, map2):
       return False
   return True
 
+# TODO: add setup and cleanup
+def check_filter(csvfile, ndim, attr_index, filterdir, filtertype, value):
+  # get filtering from original csv file map: {coords:value} that satisfy filter
+
+  # {coordline: {attribute: count}} to account for possible duplicate coordinates from auto generated csvs
+  filter_map = {}
+  f = open(csvfile, 'r')
+  for line in f:
+    line = line.strip()
+    coords = line.split(',')[0:ndim]
+    attributes = line.split(',')[ndim:]
+    attribute = attributes[attr_index] # strings
+    if evaluate_filterexpr(filtertype, value, long(attribute)):
+      coords_str = ",".join(coords)
+      if coords_str not in filter_map:
+        filter_map[coords_str] = {}
+      if attribute not in filter_map[coords_str]:
+        filter_map[coords_str][attribute] = 0
+
+      filter_map[coords_str][attribute] += 1
+
+  # read tiles from filterdir and see if it matches map produced from original csv file
+  filter_map2 = {}
+  coord_tiles = sorted([os.path.join(filterdir, x) for x in fnmatch.filter(os.listdir(filterdir), 'tile-coords-*.csv')])
+  attr_tiles = sorted([os.path.join(filterdir, x) for x in fnmatch.filter(os.listdir(filterdir), 'decompressed-rle-tile-attrs[[]%d[]]-*.csv' % attr_index)])
+
+  if len(attr_tiles) != len(coord_tiles):
+    error("attr_tiles: %d coord_tiles: %d, different!" % (len(attr_tiles), len(coord_tiles)))
+
+  for i in xrange(len(coord_tiles)):
+    attrfile = open(attr_tiles[i], 'r')
+    coordfile = open(coord_tiles[i], 'r')
+
+    attrs = attrfile.readlines()
+    coords = coordfile.readlines()
+    if len(coords) != len(attrs):
+      error("coord file and attribute file have different number of lines")
+
+    for j in xrange(len(coords)):
+      coord_s = coords[j].strip()
+      attr_s = attrs[j].strip()
+      if coord_s not in filter_map2:
+        filter_map2[coord_s] = {}
+
+      if attr_s not in filter_map2[coord_s]:
+        filter_map2[coord_s][attr_s] = 0
+      filter_map2[coord_s][attr_s] += 1
+
+  check = compare_attr_maps(filter_map, filter_map2)
+  if check:
+    log_pass("check_filter %s matches" % (filterdir))
+  else:
+    error("check_filter %s doesn't match" % (filterdir))
+
+  # TODO add cleanup
+
+
+def evaluate_filterexpr(filtertype, value, attribute):
+  if filtertype == 'LT':
+    return attribute < value
+  elif filtertype == 'LE':
+    return attribute <= value
+  elif filtertype == 'EQ':
+    return attribute == value
+  elif filtertype == 'GE':
+    return attribute >= value
+  elif filtertype == 'GT':
+    return attribute > value
+  else:
+    error("unknown filtertype : " + filtertype)
+
+def check_subarray():
+  pass
+
+def check_loading():
+  pass
+
 if __name__ == "__main__":
   csvfiles = ['data/small.csv']
   arraydirs = ['output-fl-small', 'output-FP-small']
@@ -227,3 +317,4 @@ if __name__ == "__main__":
   check_dual(arraydirs[0], arraydirs[1], 2, 1)
   check_dual(subarrays[0], subarrays[1], 2, 1)
   check_dual(filters[0], filters[1], 2, 1)
+  check_filter('data/small.csv', 2, 0, 'output-fl-small/filter-GT50', 'GT', 50)
