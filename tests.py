@@ -303,8 +303,37 @@ def evaluate_filterexpr(filtertype, value, attribute):
   else:
     error("unknown filtertype : " + filtertype)
 
-def check_subarray():
-  pass
+# TODO: add setup and cleanup
+# check that all the coords in subarray are in the subrange
+def check_subarray(subarraydir, subranges, ndim, nattr):
+  coord_tiles = sorted([os.path.join(subarraydir, x) for x in fnmatch.filter(os.listdir(subarraydir), 'tile-coords-*.csv')])
+
+  for i in xrange(len(coord_tiles)):
+    coordfile = open(coord_tiles[i], 'r')
+    coords = []
+    lines = coordfile.readlines()
+    for line in lines:
+      coord = [int(x) for x in line.strip().split(',')]
+      coords.append(coord)
+
+    for j in xrange(len(coords)):
+      if not coord_in_subrange(subranges, coords[j]):
+        error("coords: %s not in subrange: %s" % (str(coords[i]), str(subranges)))
+
+  log_pass("check_subarray %s matches" % (subarraydir))
+
+# check that coordinates are in the subrange
+def coord_in_subrange(subranges, coord):
+
+  if len(subranges) != 2 * len(coord):
+    error("coordinates and subranges size mismatch")
+
+  for i in xrange(len(coord)):
+    if coord[i] < subranges[2*i] or coord[i] > subranges[2*i + 1]:
+      return False
+
+  return True
+
 
 def check_loading():
   pass
@@ -318,3 +347,4 @@ if __name__ == "__main__":
   check_dual(subarrays[0], subarrays[1], 2, 1)
   check_dual(filters[0], filters[1], 2, 1)
   check_filter('data/small.csv', 2, 0, 'output-fl-small/filter-GT50', 'GT', 50)
+  check_subarray('output-fl-small/subarray1', [1,505, 2,499], 2, 1)
