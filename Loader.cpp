@@ -11,15 +11,16 @@
 #include <algorithm>
 #include <map>
 #include <climits>
+#include <ctime>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "Debug.h"
 #include "Loader.h"
 
 //#define TILENAME_TEMPLATE tile-%s-.dat
-// fails for 10000000 and above, not enough memory??
+// fails for 1000000 and above, not enough memory??
 //#define LIMIT 1048576 // 1 MB
-#define LIMIT 50
+#define LIMIT 1000000
 
 using namespace std;
 
@@ -64,6 +65,8 @@ void Loader::loadl(int stride) {
   // Used for creating index file of non-empty tile IDs
   set<string> tileIDset;
 
+  cout << "Creating tmp file" << endl;
+  clock_t begin = clock();
   // TODO figure out what is happening with read buffer
   // Step 1: append tileid to the end of every line
   if (infile.is_open()) {
@@ -71,6 +74,11 @@ void Loader::loadl(int stride) {
       string tileid = Loader::getTileID(line, stride);
       tileIDset.insert(tileid);
       ss << line << "," << tileid << endl;
+
+      // TODO remove?
+      outfile << line << "," << tileid << endl;
+
+      /*
       if (ss.str().size() >= LIMIT) {
         dbgmsg("dumping");
         dbgmsg(ss.str());
@@ -78,17 +86,29 @@ void Loader::loadl(int stride) {
         // clears string stream buffer
         ss.str(std::string());
       }
+      */
     }
   }
+  /*
   dbgmsg("final dumping")
   dbgmsg(ss.str())
   outfile << ss.str();
+  
   // clears string stream buffer
   ss.str(std::string());
+  */
 
   infile.close();
   outfile.close();
 
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+
+
+  cout << "External linux sort" << endl;
+  begin = clock();
   // Step 2, external sort
   int tileIDCol = this->nDim + this->nAttr + 1;
   string sortedfile = outpath + ".sorted";
@@ -105,11 +125,21 @@ void Loader::loadl(int stride) {
   // Create index file for the indexer
   Loader::createIndexFile(outdir, &tileIDset);
 
+  end = clock();
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+
+
   // Step 3. Divide sorted file into fixed logical tiles
   Loader::tilel(outdir, sortedfile, stride);
+
 }
 
 void Loader::tilel(string outdir, string sortedfile, int stride) {
+  cout << "Tiling..." << endl;
+  clock_t begin = clock();
+
   ifstream infile(sortedfile);
 
   string line;
@@ -208,12 +238,27 @@ void Loader::tilel(string outdir, string sortedfile, int stride) {
     dbgmsg("FINAL FLUSH");
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID, outdir);
   }
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Tiling Elapsed time in seconds: " << elapsed_secs << endl;
+
+
+  cout << "Compressing..." << endl;
+  begin = clock();
+
 
   // Create compressed binary attributes tiles
+  
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
     string key = it->first;
-    Loader::compressTile(key.c_str());
+    Loader::compressTile(key);
   }
+  
+  end = clock();
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Compressing Elapsed time in seconds: " << elapsed_secs << endl;
+
+
 }
 
 void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream * coordBuf, string tileid, string outdir) {
@@ -250,7 +295,7 @@ void Loader::writeTileBufsToDisk(map<string, string> * attrBufMap, stringstream 
 // attributes take up 8 bytes
 // output format: 8 bytes for occurrence, 8 bytes for value
 // Run Length Encoding Implementation
-void Loader::compressTile(const string& attrfilename) {
+void Loader::compressTile(string& attrfilename) {
   dbgmsg("Compressing tile: " + attrfilename);
   string outdir = getDirPath(attrfilename);
   FILE * filep;
@@ -260,7 +305,8 @@ void Loader::compressTile(const string& attrfilename) {
   }
   // Read exact int64_t boundaries
   uint64_t limit = (LIMIT/8) * 8;
-  char buffer[LIMIT];
+  
+  char buffer[limit];
   stringstream outBuf;
 
   // holds current number for occurrence counting
@@ -427,18 +473,25 @@ void Loader::loadp(uint64_t tileMemLimit) {
   if (infile.is_open()) {
     while (getline(infile, line)) {
       string sortkey = Loader::getSortKey(line);
-      ss << line << "," << sortkey << endl;
+      //ss << line << "," << sortkey << endl;
+
+      tmpfile << line << "," << sortkey << endl;
+
+      /*
       if (ss.str().size() >= LIMIT) {
         tmpfile << ss.str();
         // clears string stream buffer
         ss.str(std::string());
       }
+      */
     }
   }
 
   // final dumping
+  /*
   tmpfile << ss.str();
   ss.str(std::string());
+  */
 
   infile.close();
   tmpfile.close();
@@ -603,7 +656,9 @@ void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
   // Compress each attribute tile
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
     string key = it->first;
-    Loader::compressTile(key.c_str());
+    //Loader::compressTile(key.c_str());
+
+    Loader::compressTile(key);
   }
 }
 

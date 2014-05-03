@@ -8,7 +8,7 @@
 #include "Filter.h"
 
 // TODO take in as parameter from somewhere
-#define LIMIT 50
+#define LIMIT 1000000
 using namespace std;
 // Constructor
 Filter::Filter(Indexer * indexer, int attrIndex, FilterType ftype, int64_t value, string name) {
@@ -59,11 +59,11 @@ void Filter::filterTile(string tileid) {
   if (!attrFilep) {
     perror("RLE Attr tile doesn't exist");
   }
-  //uint64_t limit = (LIMIT/8) * 8;
+  uint64_t limit = (LIMIT/8) * 8;
   // TODO adjust
-  uint64_t limit = 16;
-  char inCoordBuf[1024];
-  char inAttrBuf[LIMIT];
+  //uint64_t limit = 16;
+  char inCoordBuf[limit];
+  char inAttrBuf[limit];
   stringstream outCoordBuf;
   stringstream outAttrBuf;
 
@@ -120,7 +120,7 @@ void Filter::filterTile(string tileid) {
 
     // TODO check memory limit
     // write to file
-    if (usedMem > LIMIT) {
+    if (usedMem > limit) {
       dbgmsg("\n");
       dbgmsg("memory reached, writing to file");
       outCoordFile << outCoordBuf.str();

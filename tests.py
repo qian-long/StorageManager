@@ -334,17 +334,19 @@ def coord_in_subrange(subranges, coord):
 
   return True
 
-
-def check_loading():
+# check csv and arraydir total file sizes
+# TODO
+def check_loading(csvfile, ndim, nattr, arraydir):
   pass
 
 if __name__ == "__main__":
   csvfiles = ['data/small.csv']
   arraydirs = ['output-fl-small', 'output-FP-small']
-  subarrays = ['output-fl-small/subarray1', 'output-FP-small/subarray1']
+  subarrays = ['output-fl-small/subarray1', 'output-FP-small/subarray1', 'output-fl-small/subarray2', 'output-FP-small/subarray2', 'output-fl-small/subarray3', 'output-FP-small/subarray3', 'output-fl-small/subarray4', 'output-FP-small/subarray4']
   filters = ['output-fl-small/filter-GT50', 'output-FP-small/filter-GT50']
   check_dual(arraydirs[0], arraydirs[1], 2, 1)
   check_dual(subarrays[0], subarrays[1], 2, 1)
   check_dual(filters[0], filters[1], 2, 1)
   check_filter('data/small.csv', 2, 0, 'output-fl-small/filter-GT50', 'GT', 50)
-  check_subarray('output-fl-small/subarray1', [1,505, 2,499], 2, 1)
+  for subarray in subarrays:
+    check_subarray(subarray, [1,505, 2,499], 2, 1)

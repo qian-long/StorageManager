@@ -42,7 +42,7 @@ class Loader {
 
     // write out new file
     // TODO: delete uncompressed tile?
-    void compressTile(const string& attrfilename);
+    void compressTile(string& attrfilename);
 
 
     // TODO: make private

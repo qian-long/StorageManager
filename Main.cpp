@@ -2,6 +2,7 @@
 #include <iostream>
 #include <map>
 #include <climits>
+#include <ctime>
 #include "Loader.h"
 #include "Filter.h"
 #include "Subarray.h"
@@ -20,6 +21,7 @@ void printVector(vector<string> * vec) {
 // Main function
 int main(int argc, char *argv[]) {
 
+  /*
   int64_t nDim = 2;
   int64_t nAttribute = 1;
   int stride = 100;
@@ -37,7 +39,9 @@ int main(int argc, char *argv[]) {
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
   cout << "Fixed Logical Tiles Loading..." << endl;
   loader->loadl(stride);
+  */
 
+  /*
   cout << "Fixed Physical Tiles Loading..." << endl;
   loader->loadp(tile_size);
 
@@ -45,6 +49,7 @@ int main(int argc, char *argv[]) {
   cout << "stride: " << stride << endl;
   Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-" + loader->arrayname);
   Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-" + loader->arrayname);
+  */
 
   /*
   cout << endl << "FIXED PHYSICAL TILE IDS" << endl;
@@ -69,6 +74,7 @@ int main(int argc, char *argv[]) {
   }
   */
 
+  /*
   int attrIndex = 0;
   Filter::FilterType ftype = Filter::FilterType::GT;
   int64_t val = 50;
@@ -146,8 +152,32 @@ int main(int argc, char *argv[]) {
   cout << "\nSUBARRAY3 on bb2 fixed logical tiles..." << endl;
   Subarray * s8 = new Subarray(subarray4Name, indexerl, &subranges4, &ranges, stride);
   s8->execute();
+  */
+
+  int64_t nDim = 2;
+  int64_t nAttribute = 2;
+  int stride = 10000;
+  uint64_t tile_size = 16*1000;
+
+  vector<int64_t> ranges;
+  ranges.push_back(0);
+  ranges.push_back(90*1000);
+  ranges.push_back(0);
+  ranges.push_back(180*1000);
+  string csvfile = "data/processed_geo_tweets_2013_08_13.csv";
 
 
+  cout << "Loading csvfile: " << csvfile << endl;
+  Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
+
+  clock_t begin = clock();
+  cout << "Fixed Logical Tiles Loading..." << endl;
+  loader->loadl(stride);
+
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl;
 
   return 0;
 }

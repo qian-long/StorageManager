@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "Subarray.h"
 
+# define LIMIT 1000000
 using namespace std;
 
 Subarray::Subarray(string name, Indexer * indexer, vector<int64_t> * subranges, vector<int64_t> * ranges, int64_t stride) {
@@ -165,7 +166,9 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
   }
 
   // TODO adjust
-  uint64_t limit = 32;
+  //uint64_t limit = 32;
+
+  uint64_t limit = (LIMIT/8) * 8;
   char inAttrBuf[limit];
   uint64_t cellCount = 1;
   uint64_t usedMem = 0;
