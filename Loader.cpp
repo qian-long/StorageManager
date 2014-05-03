@@ -73,30 +73,9 @@ void Loader::loadl(int stride) {
     while (getline(infile, line)) {
       string tileid = Loader::getTileID(line, stride);
       tileIDset.insert(tileid);
-      ss << line << "," << tileid << endl;
-
-      // TODO remove?
       outfile << line << "," << tileid << endl;
-
-      /*
-      if (ss.str().size() >= LIMIT) {
-        dbgmsg("dumping");
-        dbgmsg(ss.str());
-        outfile << ss.str();
-        // clears string stream buffer
-        ss.str(std::string());
-      }
-      */
     }
   }
-  /*
-  dbgmsg("final dumping")
-  dbgmsg(ss.str())
-  outfile << ss.str();
-  
-  // clears string stream buffer
-  ss.str(std::string());
-  */
 
   infile.close();
   outfile.close();
@@ -468,35 +447,29 @@ void Loader::loadp(uint64_t tileMemLimit) {
   ofstream tmpfile;
   string tmpname = getFilePath(outdir, arrayname + ".tmp");
   tmpfile.open(tmpname, std::fstream::app);
+  cout << "Creating tmp file" << endl;
+  clock_t begin = clock();
 
   // Step 1: append sort key to the end of every line
   if (infile.is_open()) {
     while (getline(infile, line)) {
       string sortkey = Loader::getSortKey(line);
-      //ss << line << "," << sortkey << endl;
-
       tmpfile << line << "," << sortkey << endl;
-
-      /*
-      if (ss.str().size() >= LIMIT) {
-        tmpfile << ss.str();
-        // clears string stream buffer
-        ss.str(std::string());
-      }
-      */
     }
   }
 
-  // final dumping
-  /*
-  tmpfile << ss.str();
-  ss.str(std::string());
-  */
-
   infile.close();
   tmpfile.close();
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+
 
   // Step 2: external sort
+  cout << "External linux sort" << endl;
+  begin = clock();
+
   int sortCol = this->nDim + this->nAttr + 1;
   string sortedfile = getFilePath(outdir, arrayname + ".sorted");
   // TODO: this is incredibly unsecure...
@@ -515,12 +488,21 @@ void Loader::loadp(uint64_t tileMemLimit) {
     perror( "Error deleting file" );
   }
 
+  end = clock();
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+
+
   // Step 3: divide into fixed physical tiles and create index file
   Loader::tilep(outdir, sortedfile, tileMemLimit);
 }
 
 void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
-  //string sortedfname = this->filename + ".sorted";
+  cout << "Tiling..." << endl;
+  clock_t begin = clock();
+
+
   ifstream infile(sortedfname);
   string line;
   int tileIDCounter = 0;
@@ -653,6 +635,13 @@ void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
   indexfile << indexBuf.str();
   indexfile.close();
 
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Tiling Elapsed time in seconds: " << elapsed_secs << endl;
+  cout << "Compressing..." << endl;
+  begin = clock();
+
+
   // Compress each attribute tile
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
     string key = it->first;
@@ -660,6 +649,12 @@ void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
 
     Loader::compressTile(key);
   }
+
+  end = clock();
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Compressing Elapsed time in seconds: " << elapsed_secs << endl;
+
+
 }
 
 // Private functions

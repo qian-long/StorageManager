@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 2;
   int stride = 10000;
-  uint64_t tile_size = 16*1000;
+  uint64_t tile_size = 16*1000000; // 16000000, 16 MB coordinate tiles
 
   vector<int64_t> ranges;
   ranges.push_back(0);
@@ -167,17 +167,25 @@ int main(int argc, char *argv[]) {
   string csvfile = "data/processed_geo_tweets_2013_08_13.csv";
 
 
-  cout << "Loading csvfile: " << csvfile << endl;
+  cout << "Initializing loader for csvfile: " << csvfile << endl;
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
 
   clock_t begin = clock();
   cout << "Fixed Logical Tiles Loading..." << endl;
   loader->loadl(stride);
-
   clock_t end = clock();
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl << endl;
 
-  cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl;
+  begin = clock();
+  cout << "Fixed Physical Tiles Loading..." << endl;
+  loader->loadp(tile_size);
+  end = clock();
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl << endl;
+
+
 
   return 0;
 }
