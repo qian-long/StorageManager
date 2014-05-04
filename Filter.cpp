@@ -27,6 +27,7 @@ Filter::~Filter() {}
 void Filter::filter() {
   // Create output directory
   // TODO: add better error handling
+  cout << "outdir: " << outdir << endl;
   if (mkdir(outdir.c_str(), S_IRWXU) != 0) {
     perror("something went wrong");
     return;
@@ -62,8 +63,8 @@ void Filter::filterTile(string tileid) {
   uint64_t limit = (LIMIT/8) * 8;
   // TODO adjust
   //uint64_t limit = 16;
-  char inCoordBuf[limit];
-  char inAttrBuf[limit];
+  char inCoordBuf[2*limit];
+  char inAttrBuf[2*limit];
   stringstream outCoordBuf;
   stringstream outAttrBuf;
 

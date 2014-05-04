@@ -45,8 +45,6 @@ int main(int argc, char *argv[]) {
   cout << "Fixed Physical Tiles Loading..." << endl;
   loader->loadp(tile_size);
 
-  cout << "TESTING INDEXERS" << endl;
-  cout << "stride: " << stride << endl;
   Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-" + loader->arrayname);
   Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-" + loader->arrayname);
   */
@@ -166,10 +164,10 @@ int main(int argc, char *argv[]) {
   ranges.push_back(180*1000);
   string csvfile = "data/processed_geo_tweets_2013_08_13.csv";
 
-
   cout << "Initializing loader for csvfile: " << csvfile << endl;
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
 
+  /*
   clock_t begin = clock();
   cout << "Fixed Logical Tiles Loading..." << endl;
   loader->loadl(stride);
@@ -184,10 +182,67 @@ int main(int argc, char *argv[]) {
   elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
   cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl << endl;
+  */
 
+  Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-" + loader->arrayname);
+  Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-" + loader->arrayname);
 
+  int attrIndex = 0;
+  Filter::FilterType ftype = Filter::FilterType::GT;
+  // timestamp
+  int64_t val = 1376402182;
+  string filtername = "filter-GT1376402182";
 
+  clock_t begin = clock();
+  Filter * fp1 = new Filter(indexerp, attrIndex, ftype, val, filtername);
+  cout << "\n\nFILTER fixed physical on: " << csvfile << endl;
+  fp1->filter();
+
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Filter total elapsed time in seconds: " << elapsed_secs << endl << endl;
+
+  cout << "\n\nFILTER fixed logical on: " << csvfile << endl;
+
+  begin = clock();
+  Filter * fp2 = new Filter(indexerl, attrIndex, ftype, val, filtername);
+  fp2->filter();
+  end = clock();
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Filter total elapsed time in seconds: " << elapsed_secs << endl << endl;
+
+  // subarray testing
+  vector<int64_t> subranges4;
+  subranges4.push_back(312);
+  subranges4.push_back(45000);
+  subranges4.push_back(130);
+  subranges4.push_back(178000);
+  string subarray4Name = "subarray0";
+  cout << "\nSUBARRAY [0,45000] [0,90000]" << endl;
+
+  begin = clock();
+  cout << "\nSUBARRAY3 on fixed physical tiles..." << endl;
+  Subarray * s7 = new Subarray(subarray4Name, indexerp, &subranges4, &ranges, stride);
+  s7->execute();
+  end = clock();
+
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Subarray total elapsed time in seconds: " << elapsed_secs << endl << endl;
+
+  begin = clock();
+  cout << "\nSUBARRAY3 on bb2 fixed logical tiles..." << endl;
+  Subarray * s8 = new Subarray(subarray4Name, indexerl, &subranges4, &ranges, stride);
+  s8->execute();
+
+  end = clock();
+
+  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+  cout << "Subarray total elapsed time in seconds: " << elapsed_secs << endl << endl;
   return 0;
+
 }
 
 

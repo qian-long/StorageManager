@@ -62,7 +62,7 @@ void Subarray::execute() {
   // Iterate through partial files to find matching coordinates
   // TODO: use circular buffer later?
   // TODO adjust based on number of dimensions
-  uint64_t limit = 16;
+  uint64_t limit = (LIMIT/8)*8;
   char inCoordBuf[limit];
 
   for (vector<string>::iterator it = partialTiles->begin(); it != partialTiles->end(); ++it) {
