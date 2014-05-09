@@ -8,7 +8,7 @@
 #include "Filter.h"
 
 // TODO take in as parameter from somewhere
-#define LIMIT 1000000
+#define LIMIT 100000000 // 100 MB buffers
 using namespace std;
 // Constructor
 Filter::Filter(Indexer * indexer, int attrIndex, FilterType ftype, int64_t value, string name) {
@@ -60,19 +60,24 @@ void Filter::filterTile(string tileid) {
   if (!attrFilep) {
     perror("RLE Attr tile doesn't exist");
   }
-  uint64_t limit = (LIMIT/8) * 8;
+  uint64_t limit = (LIMIT/16 + 1) * 16;
   // TODO adjust
   //uint64_t limit = 16;
-  char inCoordBuf[2*limit];
-  char inAttrBuf[2*limit];
+  char * inCoordBuf = new char[2 * limit];
+  char * inAttrBuf = new char[2 * limit];
   stringstream outCoordBuf;
   stringstream outAttrBuf;
 
   ofstream outCoordFile;
   ofstream outAttrFile;
+  FILE * outCoordFilep;
+  FILE * outAttrFilep;
   string cfilename = outdir + "/" + coordTile;
   string afilename = outdir + "/" + rleAttrTile;
 
+  outCoordFilep = fopen(cfilename.c_str(), "w+");
+  outAttrFilep = fopen(afilename.c_str(), "w+");
+ 
   dbgmsg("cfilename: " + cfilename);
   dbgmsg("afilename: " + afilename);
   if (!outCoordFile.is_open()) {
@@ -91,9 +96,10 @@ void Filter::filterTile(string tileid) {
     uint64_t coordCount = 0;
     for (uint64_t i = 0; i < areadsize; i = i + 16) {
       uint64_t occurrence = *((uint64_t *)(inAttrBuf + i));
-      dbgmsg("occurrence: " + to_string(occurrence));
+      //dbgmsg("occurrence: " + to_string(occurrence));
       coordCount += occurrence;
     }
+
     // read coordCount * nDim * 8 bytes from coordFile
     dbgmsg("num bytes to read from coordFilep: " + to_string(coordCount * indexer->nDim * 8));
     fread((char *)inCoordBuf, 1, coordCount * indexer->nDim * 8, coordFilep);
@@ -121,9 +127,10 @@ void Filter::filterTile(string tileid) {
 
     // TODO check memory limit
     // write to file
+    /*
     if (usedMem > limit) {
-      dbgmsg("\n");
-      dbgmsg("memory reached, writing to file");
+      //dbgmsg("memory reached, writing to file");
+      cout << "memory reached, writing to file" << endl;
       outCoordFile << outCoordBuf.str();
       outAttrFile << outAttrBuf.str();
 
@@ -132,18 +139,33 @@ void Filter::filterTile(string tileid) {
       outAttrBuf.str(std::string());
       usedMem = 0;
     }
+    */
   }
 
   // Final flush
   dbgmsg("final flush");
   outCoordFile << outCoordBuf.str();
   outAttrFile << outAttrBuf.str();
+  /*
+  const char * c = outCoordBuf.str().c_str();
+  const char * d = outAttrBuf.str().c_str();
+  fwrite(c, 1, outCoordBuf.str().size(), outCoordFilep);
+  fwrite(d, 1, outAttrBuf.str().size(), outAttrFilep);
+  */
 
   // Close all files
   fclose(attrFilep);
   fclose(coordFilep);
+  fclose(outAttrFilep);
+  fclose(outCoordFilep);
+
   outCoordFile.close();
   outAttrFile.close();
+
+
+  // deallocate memory
+  delete [] inCoordBuf;
+  delete [] inAttrBuf;
 }
 
 bool Filter::evaluate(int64_t attrval) {

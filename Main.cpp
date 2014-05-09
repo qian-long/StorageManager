@@ -3,6 +3,8 @@
 #include <map>
 #include <climits>
 #include <ctime>
+#include <chrono>
+#include <sys/time.h>
 #include "Loader.h"
 #include "Filter.h"
 #include "Subarray.h"
@@ -155,36 +157,70 @@ int main(int argc, char *argv[]) {
   int64_t nDim = 2;
   int64_t nAttribute = 2;
   int stride = 10000;
-  uint64_t tile_size = 16*1000000; // 16000000, 16 MB coordinate tiles
+  uint64_t tile_size = 96*1000000; // 96000000, 96 MB coordinate tiles
 
   vector<int64_t> ranges;
-  ranges.push_back(0);
-  ranges.push_back(90*1000);
+  // [0, 180000], [0, 360000]
   ranges.push_back(0);
   ranges.push_back(180*1000);
-  string csvfile = "data/processed_geo_tweets_2013_08_13.csv";
+  ranges.push_back(0);
+  ranges.push_back(360*1000);
+  //string csvfile = "data/processed_geo_tweets_2013_08_13.csv";
+  string csvfile = "data/all_tweets.csv";
 
+  
   cout << "Initializing loader for csvfile: " << csvfile << endl;
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
 
+  
   /*
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
+  double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   clock_t begin = clock();
+
   cout << "Fixed Logical Tiles Loading..." << endl;
   loader->loadl(stride);
-  clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl << endl;
 
+  clock_t end = clock();
+  gettimeofday(&tim, NULL);
+  double t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  double elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  double elapsed_real_secs = t2 - t1;
+
+
+  cout << "Finished Fixed Logical Tiles Loading" << endl;
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O  and external sort time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+
+  gettimeofday(&tim, NULL);
   begin = clock();
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   cout << "Fixed Physical Tiles Loading..." << endl;
   loader->loadp(tile_size);
+
   end = clock();
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
-  cout << "Loading total elapsed time in seconds: " << elapsed_secs << endl << endl;
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+
+  cout << "Finished Fixed Physical Tiles Loading" << endl;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O and external sort time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
   */
+  
 
+
+
+  cout << "Initializing fixed physical tile indexer" << endl;
   Indexer *indexerp = new Indexerp(nDim, ranges, nAttribute, "output-FP-" + loader->arrayname);
+
+  cout << "Initializing fixed logical tile indexer" << endl;
   Indexer *indexerl = new IndexerL(nDim, ranges, nAttribute, stride, "output-fl-" + loader->arrayname);
 
   int attrIndex = 0;
@@ -193,56 +229,216 @@ int main(int argc, char *argv[]) {
   int64_t val = 1376402182;
   string filtername = "filter-GT1376402182";
 
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
   clock_t begin = clock();
+  double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
   Filter * fp1 = new Filter(indexerp, attrIndex, ftype, val, filtername);
   cout << "\n\nFILTER fixed physical on: " << csvfile << endl;
   fp1->filter();
 
   clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  gettimeofday(&tim, NULL);
+  double t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  double elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  double elapsed_real_secs = t2 - t1;
 
-  cout << "Filter total elapsed time in seconds: " << elapsed_secs << endl << endl;
+  //auto fp1_elapsed = std::chrono::duration_cast<std::chrono::seconds>(endfp1 - startfp1);
+
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
 
   cout << "\n\nFILTER fixed logical on: " << csvfile << endl;
-
+  gettimeofday(&tim, NULL);
   begin = clock();
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+  //auto startfp2 = std::chrono::system_clock::now();
   Filter * fp2 = new Filter(indexerl, attrIndex, ftype, val, filtername);
   fp2->filter();
   end = clock();
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  cout << "Filter total elapsed time in seconds: " << elapsed_secs << endl << endl;
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
-  // subarray testing
+
+  //auto endfp2 = std::chrono::system_clock::now();
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  //auto fp2_elapsed = std::chrono::duration_cast<std::chrono::seconds>(endfp2 - startfp2);
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+  // subarray0 testing
   vector<int64_t> subranges4;
   subranges4.push_back(312);
-  subranges4.push_back(45000);
-  subranges4.push_back(130);
-  subranges4.push_back(178000);
+  subranges4.push_back(178394);
+  subranges4.push_back(133);
+  subranges4.push_back(294850);
   string subarray4Name = "subarray0";
-  cout << "\nSUBARRAY [0,45000] [0,90000]" << endl;
+  cout << "\nSUBARRAY [312,178394] [133,294850]" << endl;
 
+  cout << "\nSUBARRAY on fixed physical tiles..." << endl;
+
+
+  auto startfp2 = std::chrono::system_clock::now();
+  gettimeofday(&tim, NULL);
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   begin = clock();
-  cout << "\nSUBARRAY3 on fixed physical tiles..." << endl;
+
+
   Subarray * s7 = new Subarray(subarray4Name, indexerp, &subranges4, &ranges, stride);
   s7->execute();
+
   end = clock();
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  auto endfp2 = std::chrono::system_clock::now();
 
-  cout << "Subarray total elapsed time in seconds: " << elapsed_secs << endl << endl;
+  auto fp2_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(endfp2 - startfp2);
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Elapsed real time c++11 in milliseconds: " << fp2_elapsed.count() << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
 
+
+  cout << "\nSUBARRAY3 on fixed logical tiles..." << endl;
+
+  gettimeofday(&tim, NULL);
   begin = clock();
-  cout << "\nSUBARRAY3 on bb2 fixed logical tiles..." << endl;
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
   Subarray * s8 = new Subarray(subarray4Name, indexerl, &subranges4, &ranges, stride);
   s8->execute();
 
   end = clock();
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+  
 
-  cout << "Subarray total elapsed time in seconds: " << elapsed_secs << endl << endl;
+  // subarray1 testing
+  // new york
+  // shifted_lat: [130463, 131236] range: 773
+  // shifted_long: [105105, 106357] range: 1252 
+  /*
+  vector<int64_t> subranges5;
+  subranges5.push_back(130463);
+  subranges5.push_back(131236);
+  subranges5.push_back(105105);
+  subranges5.push_back(106357);
+  string subarray5Name = "subarray5";
+  cout << "\nSUBARRAY New York [130463,131236] [105105, 106357]" << endl;
+
+  cout << "\nSUBARRAY on fixed physical tiles..." << endl;
+
+
+  gettimeofday(&tim, NULL);
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  begin = clock();
+
+
+  Subarray * s9 = new Subarray(subarray5Name, indexerp, &subranges5, &ranges, stride);
+  s9->execute();
+
+  end = clock();
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+
+  cout << "\nSUBARRAY on fixed logical tiles..." << endl;
+
+  gettimeofday(&tim, NULL);
+  begin = clock();
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+  Subarray * s10 = new Subarray(subarray5Name, indexerl, &subranges5, &ranges, stride);
+  s10->execute();
+
+  end = clock();
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+  // subarray1 testing
+  // sahara
+  // shifted_lat: [114527,115260]
+  // shifted_long: [191499, 192751] 
+  vector<int64_t> subranges6;
+  subranges6.push_back(114527);
+  subranges6.push_back(115260);
+  subranges6.push_back(191499);
+  subranges6.push_back(192751);
+  string subarray6Name = "subarray6";
+  cout << "\nSUBARRAY Sahara [114527,115260] [191499,192751]" << endl;
+
+  cout << "\nSUBARRAY on fixed physical tiles..." << endl;
+
+
+  gettimeofday(&tim, NULL);
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  begin = clock();
+
+
+  Subarray * s11 = new Subarray(subarray6Name, indexerp, &subranges6, &ranges, stride);
+  s11->execute();
+
+  end = clock();
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+
+  cout << "\nSUBARRAY3 on fixed logical tiles..." << endl;
+
+  gettimeofday(&tim, NULL);
+  begin = clock();
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+  Subarray * s12 = new Subarray(subarray6Name, indexerl, &subranges6, &ranges, stride);
+  s12->execute();
+
+  end = clock();
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+  */
+
+
   return 0;
-
 }
 
 

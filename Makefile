@@ -20,7 +20,7 @@ all: $(SOURCES) $(EXECUTABLE)
 
 
 clean:
-	$(RM) -r $(EXECUTABLE) *.o *~ *.dat *.csv data/*.tmp* myindex.txt myindex-fp.txt data/*.sorted* output-*/filter-* output-*/subarray*
+	$(RM) -r $(EXECUTABLE) *.o *~ *.dat *.csv data/*.tmp* myindex.txt myindex-fp.txt data/*.sorted*
 
 cleandata:
 	$(RM) -r *.dat* *.csv myindex.txt output* data/*.tmp data/*.sorted

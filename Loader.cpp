@@ -14,13 +14,14 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include "Debug.h"
 #include "Loader.h"
 
 //#define TILENAME_TEMPLATE tile-%s-.dat
 // fails for 1000000 and above, not enough memory??
 //#define LIMIT 1048576 // 1 MB
-#define LIMIT 1000000
+#define LIMIT 100000000 // 100 MB
 
 using namespace std;
 
@@ -66,7 +67,11 @@ void Loader::loadl(int stride) {
   set<string> tileIDset;
 
   cout << "Creating tmp file" << endl;
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
+  double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   clock_t begin = clock();
+
   // TODO figure out what is happening with read buffer
   // Step 1: append tileid to the end of every line
   if (infile.is_open()) {
@@ -81,13 +86,23 @@ void Loader::loadl(int stride) {
   outfile.close();
 
   clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  gettimeofday(&tim, NULL);
+  double t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  double elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  double elapsed_real_secs = t2 - t1;
 
-  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
 
 
   cout << "External linux sort" << endl;
+  gettimeofday(&tim, NULL);
   begin = clock();
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+ 
   // Step 2, external sort
   int tileIDCol = this->nDim + this->nAttr + 1;
   string sortedfile = outpath + ".sorted";
@@ -105,9 +120,15 @@ void Loader::loadl(int stride) {
   Loader::createIndexFile(outdir, &tileIDset);
 
   end = clock();
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
-  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
 
 
   // Step 3. Divide sorted file into fixed logical tiles
@@ -116,8 +137,12 @@ void Loader::loadl(int stride) {
 }
 
 void Loader::tilel(string outdir, string sortedfile, int stride) {
-  cout << "Tiling..." << endl;
+  cout << "Tiling Fixed Logical tiles..." << endl;
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
+  double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   clock_t begin = clock();
+
 
   ifstream infile(sortedfile);
 
@@ -217,14 +242,24 @@ void Loader::tilel(string outdir, string sortedfile, int stride) {
     dbgmsg("FINAL FLUSH");
     Loader::writeTileBufsToDisk(&attrBufMap, &coordBuf, currentTileID, outdir);
   }
+
   clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  cout << "Tiling Elapsed time in seconds: " << elapsed_secs << endl;
+  gettimeofday(&tim, NULL);
+  double t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  double elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  double elapsed_real_secs = t2 - t1;
 
 
-  cout << "Compressing..." << endl;
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+
+  cout << "COMPRESSING" << endl;
+  gettimeofday(&tim, NULL);
   begin = clock();
-
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+ 
 
   // Create compressed binary attributes tiles
   
@@ -234,9 +269,14 @@ void Loader::tilel(string outdir, string sortedfile, int stride) {
   }
   
   end = clock();
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  cout << "Compressing Elapsed time in seconds: " << elapsed_secs << endl;
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O sort time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
 
 }
 
@@ -283,9 +323,9 @@ void Loader::compressTile(string& attrfilename) {
     perror("file doesn't exist");
   }
   // Read exact int64_t boundaries
-  uint64_t limit = (LIMIT/8) * 8;
+  uint64_t limit = (LIMIT/8 + 1) * 8;
   
-  char buffer[limit];
+  char * buffer = new char[limit];
   stringstream outBuf;
 
   // holds current number for occurrence counting
@@ -353,6 +393,8 @@ void Loader::compressTile(string& attrfilename) {
   // reset buffer
   outBuf.str(std::string());
   outFile.close();
+  // deallocate buffer
+  delete [] buffer;
 }
 
 
@@ -448,6 +490,10 @@ void Loader::loadp(uint64_t tileMemLimit) {
   string tmpname = getFilePath(outdir, arrayname + ".tmp");
   tmpfile.open(tmpname, std::fstream::app);
   cout << "Creating tmp file" << endl;
+
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
+  double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   clock_t begin = clock();
 
   // Step 1: append sort key to the end of every line
@@ -460,16 +506,26 @@ void Loader::loadp(uint64_t tileMemLimit) {
 
   infile.close();
   tmpfile.close();
-  clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+  clock_t end = clock();
+  gettimeofday(&tim, NULL);
+  double t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  double elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  double elapsed_real_secs = t2 - t1;
+
+
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
 
 
   // Step 2: external sort
   cout << "External linux sort" << endl;
+  gettimeofday(&tim, NULL);
   begin = clock();
-
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
+ 
   int sortCol = this->nDim + this->nAttr + 1;
   string sortedfile = getFilePath(outdir, arrayname + ".sorted");
   // TODO: this is incredibly unsecure...
@@ -489,9 +545,15 @@ void Loader::loadp(uint64_t tileMemLimit) {
   }
 
   end = clock();
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
-  cout << "Elapsed time in seconds: " << elapsed_secs << endl;
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+
+  cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated external sort time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
 
 
   // Step 3: divide into fixed physical tiles and create index file
@@ -500,8 +562,10 @@ void Loader::loadp(uint64_t tileMemLimit) {
 
 void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
   cout << "Tiling..." << endl;
+  struct timeval tim;
+  gettimeofday(&tim, NULL);
+  double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
   clock_t begin = clock();
-
 
   ifstream infile(sortedfname);
   string line;
@@ -636,11 +700,21 @@ void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
   indexfile.close();
 
   clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  cout << "Tiling Elapsed time in seconds: " << elapsed_secs << endl;
-  cout << "Compressing..." << endl;
-  begin = clock();
+  gettimeofday(&tim, NULL);
+  double t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  double elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  double elapsed_real_secs = t2 - t1;
 
+
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
+
+  cout << "Compressing..." << endl;
+
+  gettimeofday(&tim, NULL);
+  begin = clock();
+  t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
 
   // Compress each attribute tile
   for (map<string, string>::iterator it = attrBufMap.begin(); it != attrBufMap.end(); ++it) {
@@ -651,8 +725,14 @@ void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
   }
 
   end = clock();
-  elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  cout << "Compressing Elapsed time in seconds: " << elapsed_secs << endl;
+  gettimeofday(&tim, NULL);
+  t2 = tim.tv_sec+(tim.tv_usec/1000000.0);
+  elapsed_cpu_secs = double(end - begin) / CLOCKS_PER_SEC;
+  elapsed_real_secs = t2 - t1;
+
+  cout << "Elapsed CPU time in seconds: " << elapsed_cpu_secs << endl;
+  cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
+  cout << "Calculated disk I/O: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
 
 
 }

@@ -98,6 +98,6 @@ def main():
     uncompressRLE(tile)
 
 if __name__ == "__main__":
-  main()
-  convert_dir("output-fl-small");
-  convert_dir("output-FP-small");
+  #main()
+  convert_dir("output-fl-all_tweets");
+  convert_dir("output-FP-all_tweets");

@@ -340,7 +340,8 @@ def check_loading(csvfile, ndim, nattr, arraydir):
   pass
 
 if __name__ == "__main__":
-  csvfiles = ['data/small.csv']
+  csvfiles = ['data/all_tweets.csv']
+  """
   arraydirs = ['output-fl-small', 'output-FP-small']
   subarrays = ['output-fl-small/subarray1', 'output-FP-small/subarray1', 'output-fl-small/subarray2', 'output-FP-small/subarray2', 'output-fl-small/subarray3', 'output-FP-small/subarray3', 'output-fl-small/subarray4', 'output-FP-small/subarray4']
   filters = ['output-fl-small/filter-GT50', 'output-FP-small/filter-GT50']
@@ -350,3 +351,7 @@ if __name__ == "__main__":
   check_filter('data/small.csv', 2, 0, 'output-fl-small/filter-GT50', 'GT', 50)
   for subarray in subarrays:
     check_subarray(subarray, [1,505, 2,499], 2, 1)
+  """
+  check_filter(csvfiles[0], 2, 0, 'output-fl-all_tweets/filter-GT1376402182', 'GT', 1376402182)
+
+  check_filter(csvfiles[0], 2, 0, 'output-FP-all_tweets/filter-GT1376402182', 'GT', 1376402182)

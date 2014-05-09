@@ -7,7 +7,7 @@
 #include "Debug.h"
 #include "Subarray.h"
 
-# define LIMIT 1000000
+# define LIMIT 100000000 // 100MB buffer
 using namespace std;
 
 Subarray::Subarray(string name, Indexer * indexer, vector<int64_t> * subranges, vector<int64_t> * ranges, int64_t stride) {
@@ -62,8 +62,9 @@ void Subarray::execute() {
   // Iterate through partial files to find matching coordinates
   // TODO: use circular buffer later?
   // TODO adjust based on number of dimensions
-  uint64_t limit = (LIMIT/8)*8;
-  char inCoordBuf[limit];
+  uint64_t limit = (LIMIT/8 + 1)*8;
+  //char inCoordBuf[limit];
+  char * inCoordBuf = new char[limit];
 
   for (vector<string>::iterator it = partialTiles->begin(); it != partialTiles->end(); ++it) {
     vector<uint64_t> inRangeCellNums; // cells in coordinate tile that is in range
@@ -144,6 +145,7 @@ void Subarray::execute() {
 
   delete wholeTiles;
   delete partialTiles;
+  delete [] inCoordBuf;
 }
 
 // cellNums: in range cell nums from the coordinate tile
@@ -168,8 +170,9 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
   // TODO adjust
   //uint64_t limit = 32;
 
-  uint64_t limit = (LIMIT/8) * 8;
-  char inAttrBuf[limit];
+  uint64_t limit = (LIMIT/8 + 1) * 8;
+  //char inAttrBuf[limit];
+  char * inAttrBuf = new char[limit];
   uint64_t cellCount = 1;
   uint64_t usedMem = 0;
 
@@ -222,6 +225,8 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
   outAttrFile << outAttrBuf.str();
   outAttrFile.close();
   fclose(attrFilep);
+
+  delete [] inAttrBuf;
 }
 
 // Private Functions
