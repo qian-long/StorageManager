@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <cstring>
 #include "Debug.h"
 #include "Filter.h"
 
@@ -49,6 +50,7 @@ void Filter::filterTile(string tileid) {
 
   string coordTilePath = indexer->arraydir + "/" + coordTile;
   string rleAttrTilePath = indexer->arraydir + "/" + rleAttrTile;
+
   // input files
   FILE * coordFilep;
   FILE * attrFilep;
@@ -61,22 +63,23 @@ void Filter::filterTile(string tileid) {
     perror("RLE Attr tile doesn't exist");
   }
   uint64_t limit = (LIMIT/16 + 1) * 16;
-  // TODO adjust
-  //uint64_t limit = 16;
   char * inCoordBuf = new char[2 * limit];
   char * inAttrBuf = new char[2 * limit];
   stringstream outCoordBuf;
   stringstream outAttrBuf;
 
+  char * outCoordBuffer = new char[2 * limit];
+  char * outAttrBuffer = new char[2 * limit];
+  uint64_t outCoordPos = 0;
+  uint64_t outAttrPos = 0;
+
   ofstream outCoordFile;
   ofstream outAttrFile;
-  FILE * outCoordFilep;
-  FILE * outAttrFilep;
   string cfilename = outdir + "/" + coordTile;
   string afilename = outdir + "/" + rleAttrTile;
 
-  outCoordFilep = fopen(cfilename.c_str(), "w+");
-  outAttrFilep = fopen(afilename.c_str(), "w+");
+  //outCoordFilep = fopen(cfilename.c_str(), "w+");
+  //outAttrFilep = fopen(afilename.c_str(), "w+");
  
   dbgmsg("cfilename: " + cfilename);
   dbgmsg("afilename: " + afilename);
@@ -111,11 +114,19 @@ void Filter::filterTile(string tileid) {
       uint64_t occurrence = *((int64_t *)(inAttrBuf + i));
       int64_t attribute = *((int64_t *)(inAttrBuf + i + 8));
       if (Filter::evaluate(attribute)) {
-        outAttrBuf.write((char *)(&occurrence), 8);
-        outAttrBuf.write((char *)(&attribute), 8);
+        //outAttrBuf.write((char *)(&occurrence), 8);
+        //outAttrBuf.write((char *)(&attribute), 8);
+        std::memcpy((outAttrBuffer + outAttrPos), (char *)(&occurrence), 8);
+        outAttrPos += 8;
+        std::memcpy((outAttrBuffer + outAttrPos), (char *)(&attribute), 8);
+        outAttrPos += 8;
+
         // write all the coordinates associated with that attribute
-        outCoordBuf.write((char *)(inCoordBuf + coordIndex), 8 * indexer->nDim * occurrence);
-        usedMem += 16 + 8 * indexer->nDim * occurrence;
+        //outCoordBuf.write((char *)(inCoordBuf + coordIndex), 8 * indexer->nDim * occurrence);
+        memcpy((outCoordBuffer + outCoordPos), (char *)(inCoordBuf + coordIndex), 8 * indexer->nDim * occurrence);
+        outCoordPos += 8 * indexer->nDim * occurrence;
+
+        //usedMem += 16 + 8 * indexer->nDim * occurrence;
       }
 
       // next coordinate index
@@ -144,20 +155,16 @@ void Filter::filterTile(string tileid) {
 
   // Final flush
   dbgmsg("final flush");
-  outCoordFile << outCoordBuf.str();
-  outAttrFile << outAttrBuf.str();
-  /*
-  const char * c = outCoordBuf.str().c_str();
-  const char * d = outAttrBuf.str().c_str();
-  fwrite(c, 1, outCoordBuf.str().size(), outCoordFilep);
-  fwrite(d, 1, outAttrBuf.str().size(), outAttrFilep);
-  */
+  //outCoordFile << outCoordBuf.str();
+  //outAttrFile << outAttrBuf.str();
+  outCoordFile.write(outCoordBuffer, outCoordPos);
+  outAttrFile.write(outAttrBuffer, outAttrPos);
 
   // Close all files
   fclose(attrFilep);
   fclose(coordFilep);
-  fclose(outAttrFilep);
-  fclose(outCoordFilep);
+  //fclose(outAttrFilep);
+  //fclose(outCoordFilep);
 
   outCoordFile.close();
   outAttrFile.close();
@@ -166,6 +173,8 @@ void Filter::filterTile(string tileid) {
   // deallocate memory
   delete [] inCoordBuf;
   delete [] inAttrBuf;
+  delete [] outCoordBuffer;
+  delete [] outAttrBuffer;
 }
 
 bool Filter::evaluate(int64_t attrval) {

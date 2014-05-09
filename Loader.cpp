@@ -58,7 +58,7 @@ void Loader::loadl(int stride) {
   string outpath = getFilePath(outdir, arrayname);
   ifstream infile(this->filename);
   string line;
-  std::stringstream ss;
+  //std::stringstream ss;
   ofstream outfile;
   string tmpname = outpath + ".tmp";
   outfile.open(tmpname, std::fstream::app);
@@ -78,7 +78,7 @@ void Loader::loadl(int stride) {
     while (getline(infile, line)) {
       string tileid = Loader::getTileID(line, stride);
       tileIDset.insert(tileid);
-      outfile << line << "," << tileid << endl;
+      outfile << line << "," << tileid << "\n";
     }
   }
 
@@ -461,7 +461,7 @@ void Loader::createIndexFile(string dirpath, set<string> * tileIDs) {
   string outfile = getFilePath(dirpath, "index.txt");
   out.open(outfile);
   for (set<string>::iterator it = tileIDs->begin(); it != tileIDs->end(); ++it) {
-    out << *it << endl;
+    out << *it << "\n";
   }
   out.close();
 }
@@ -500,7 +500,7 @@ void Loader::loadp(uint64_t tileMemLimit) {
   if (infile.is_open()) {
     while (getline(infile, line)) {
       string sortkey = Loader::getSortKey(line);
-      tmpfile << line << "," << sortkey << endl;
+      tmpfile << line << "," << sortkey << "\n";
     }
   }
 
@@ -690,7 +690,7 @@ void Loader::tilep(string outdir, string sortedfname, uint64_t tileMemLimit) {
     for (vector<int64_t>::iterator itm = maxCoords.begin(); itm != maxCoords.end(); ++itm) {
       indexBuf << *itm << ",";
     }
-    indexBuf << tileIDCounter << endl;
+    indexBuf << tileIDCounter << "\n";
   }
 
   // Write index to disk

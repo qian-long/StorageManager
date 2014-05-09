@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
   Loader *loader = new Loader(csvfile, nDim, ranges, nAttribute);
 
   
-  /*
+ /* 
   struct timeval tim;
   gettimeofday(&tim, NULL);
   double t1 = tim.tv_sec+(tim.tv_usec/1000000.0);
@@ -213,8 +213,6 @@ int main(int argc, char *argv[]) {
   cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
   cout << "Calculated disk I/O and external sort time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
   */
-  
-
 
 
   cout << "Initializing fixed physical tile indexer" << endl;
@@ -272,6 +270,7 @@ int main(int argc, char *argv[]) {
   cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
   cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
 
+  /*
   // subarray0 testing
   vector<int64_t> subranges4;
   subranges4.push_back(312);
@@ -326,7 +325,7 @@ int main(int argc, char *argv[]) {
   cout << "Elapsed cpu time in seconds: " << elapsed_cpu_secs << endl;
   cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
   cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
-  
+  */
 
   // subarray1 testing
   // new york
@@ -436,7 +435,6 @@ int main(int argc, char *argv[]) {
   cout << "Elapsed real time in seconds: " << elapsed_real_secs << endl;
   cout << "Calculated disk I/O time: " << elapsed_real_secs - elapsed_cpu_secs << endl << endl;
   */
-
 
   return 0;
 }

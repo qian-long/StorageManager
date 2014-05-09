@@ -62,7 +62,7 @@ void Subarray::execute() {
   // Iterate through partial files to find matching coordinates
   // TODO: use circular buffer later?
   // TODO adjust based on number of dimensions
-  uint64_t limit = (LIMIT/8 + 1)*8;
+  uint64_t limit = (LIMIT/16 + 1)*16;
   //char inCoordBuf[limit];
   char * inCoordBuf = new char[limit];
 
@@ -170,7 +170,7 @@ void Subarray::subarrayAttr(string tileid, vector<uint64_t> * cellNums, int attr
   // TODO adjust
   //uint64_t limit = 32;
 
-  uint64_t limit = (LIMIT/8 + 1) * 8;
+  uint64_t limit = (LIMIT/16 + 1) * 16;
   //char inAttrBuf[limit];
   char * inAttrBuf = new char[limit];
   uint64_t cellCount = 1;
